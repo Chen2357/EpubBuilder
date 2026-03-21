@@ -1,7 +1,6 @@
 import Testing
 @testable import EpubBuilder
 import Foundation
-import Zip
 
 func getOutputFolderURL() throws -> URL {
     let fileManager = FileManager.default

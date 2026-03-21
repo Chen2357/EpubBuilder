@@ -10,9 +10,6 @@ let package = Package(
             targets: ["EpubBuilder"]
         ),
     ],
-    // dependencies: [
-    //     .package(url: "https://github.com/marmelroy/Zip.git", from: "2.1.0"),
-    // ],
     targets: [
         .target(
             name: "EpubBuilder"
