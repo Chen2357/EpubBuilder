@@ -1,10 +1,10 @@
 import Foundation
 
-struct JpgFile {
-    var name: String
-    var data: Data
+public struct JpgFile {
+    public var name: String
+    public var data: Data
 
-    init(name: String, data: Data) {
+    public init(name: String, data: Data) {
         guard name.hasSuffix(".jpg") else {
             fatalError("File name must end with .jpg. Received: \(name)")
         }
@@ -13,11 +13,11 @@ struct JpgFile {
     }
 }
 
-struct TextFile {
-    var name: String
-    var content: String
+public struct TextFile {
+    public var name: String
+    public var content: String
 
-    init(name: String, content: String) {
+    public init(name: String, content: String) {
         self.name = name
         self.content = content
     }

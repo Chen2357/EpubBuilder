@@ -1,18 +1,18 @@
 import Foundation
 
-struct EpubBook {
-    var title: String
-    var author: String
-    var bookId: UUID = UUID()
+public struct EpubBook {
+    public var title: String
+    public var author: String
+    public var bookId: UUID = UUID()
 
-    var images: [JpgFile]
-    var styles: [TextFile]
-    var contents: [TextFile]
+    public var images: [JpgFile]
+    public var styles: [TextFile]
+    public var contents: [TextFile]
 
-    var coverImageName: String = "cover.jpg"
-    var navigationFileName: String = "nav.xhtml"
+    public var coverImageName: String = "cover.jpg"
+    public var navigationFileName: String = "nav.xhtml"
 
-    init(title: String, author: String, bookId: UUID = UUID(), images: [JpgFile], styles: [TextFile], contents: [TextFile], coverImageName: String = "cover.jpg", navigationFileName: String = "nav.xhtml") {
+    public init(title: String, author: String, bookId: UUID = UUID(), images: [JpgFile], styles: [TextFile], contents: [TextFile], coverImageName: String = "cover.jpg", navigationFileName: String = "nav.xhtml") {
         guard contents.contains(where: { $0.name == navigationFileName }) else {
             fatalError("Navigation file with name \(navigationFileName) not found in contents.")
         }
@@ -31,7 +31,7 @@ struct EpubBook {
     }
 }
 
-extension EpubBook {
+public extension EpubBook {
     static var mimetype: String {
         "application/epub+zip"
     }

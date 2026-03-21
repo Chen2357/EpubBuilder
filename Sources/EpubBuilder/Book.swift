@@ -1,27 +1,40 @@
 import Foundation
 
-struct Book {
-    var title: String
-    var author: String
-    var cover: Data
-    var images: [JpgFile]
+public struct Book {
+    public var title: String
+    public var author: String
+    public var cover: Data
+    public var images: [JpgFile]
 
-    var chapters: [Chapter]
+    public var chapters: [Chapter]
+
+    public init(title: String, author: String, cover: Data, images: [JpgFile], chapters: [Chapter]) {
+        self.title = title
+        self.author = author
+        self.cover = cover
+        self.images = images
+        self.chapters = chapters
+    }
 }
 
-enum Content {
+public enum Content {
     case text(String)
     case image(String)
     case lineBreak
 }
 
-struct Chapter {
-    var title: String
-    var content: [Content]
+public struct Chapter {
+    public var title: String
+    public var content: [Content]
+
+    public init(title: String, content: [Content]) {
+        self.title = title
+        self.content = content
+    }
 }
 
 extension Book {
-    func toEpubStyle1(uuid: UUID = UUID()) -> EpubBook {
+    public func toEpubStyle1(uuid: UUID = UUID()) -> EpubBook {
         guard images.allSatisfy({ $0.name != "cover.jpg" }) else {
             fatalError(
                 "'cover.jpg' must be reserved for the cover image and not appear in the images array."
