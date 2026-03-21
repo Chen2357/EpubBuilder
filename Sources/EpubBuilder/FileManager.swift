@@ -27,6 +27,11 @@ public struct File: FileSystemItem, Equatable {
         self.data = data
     }
 
+    public init(_ name: String, text: String) {
+        self.name = name
+        self.data = text.data(using: .utf8)
+    }
+
     func addToFileStructure(_ structure: inout FileSystemNode) {
         structure.files.append(self)
     }

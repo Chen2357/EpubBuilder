@@ -15,8 +15,9 @@
     <item id="images.cover.jpg" href="images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>
     <item id="style.reset.css" href="style/reset.css" media-type="text/css"/>
 <item id="style.bookstyle.css" href="style/bookstyle.css" media-type="text/css"/>
+    <item id="toc" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
 </manifest>
-<spine page-progression-direction="rtl">
+<spine page-progression-direction="rtl" toc="toc">
     <itemref idref="text.cover.xhtml"/>
 <itemref idref="text.title.xhtml"/>
 <itemref idref="nav"/>

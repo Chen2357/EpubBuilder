@@ -6,14 +6,14 @@ public struct Book {
     public var cover: Data
     public var images: [JpgFile]
 
-    public var chapters: [Chapter]
+    public var sections: [Section]
 
-    public init(title: String, author: String, cover: Data, images: [JpgFile], chapters: [Chapter]) {
+    public init(title: String, author: String, cover: Data, images: [JpgFile], sections: [Section]) {
         self.title = title
         self.author = author
         self.cover = cover
         self.images = images
-        self.chapters = chapters
+        self.sections = sections
     }
 }
 
@@ -23,22 +23,71 @@ public enum Content {
     case lineBreak
 }
 
-public struct Chapter {
+public struct Section {
     public var title: String
     public var content: [Content]
+    public var subsections: [Section] = []
 
-    public init(title: String, content: [Content]) {
+    public init(title: String, content: [Content], subsections: [Section] = []) {
         self.title = title
         self.content = content
+        self.subsections = subsections
+    }
+}
+
+public extension Section {
+    var depth: Int {
+        1 + (subsections.map(\.depth).max() ?? 0)
+    }
+}
+
+extension Section {
+    var toHtmlStyle1: String {
+        let body = content.map { content in
+            switch content {
+            case .text(let text):
+                return "<p>\(text)</p>"
+            case .image(let source):
+                return "<p><div class=\"sashie\"><img src=\"../images/\(source)\" /></div></p>"
+            case .lineBreak:
+                return "<p><br/></p>"
+            }
+        }.joined(separator: "\n")
+
+        return """
+        <?xml version="1.0" encoding="utf-8"?>
+        <!DOCTYPE html>
+        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja"
+            xmlns:epub="http://www.idpf.org/2007/ops">
+        <head>
+        <link href="../style/reset.css" rel="stylesheet" type="text/css" />
+        <link rel="stylesheet" type="text/css" href="../style/bookstyle.css" />
+        <title>\(title)</title>
+        </head><body>
+        <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(title)</h1></div></div>
+        \(body)
+        </body></html>
+        """
     }
 }
 
 extension Book {
-    public func toEpubStyle1(uuid: UUID = UUID()) -> EpubBook {
+    public func toEpubStyle1(depth: Int, bookId: UUID = UUID()) -> EpubBook {
         guard images.allSatisfy({ $0.name != "cover.jpg" }) else {
             fatalError(
                 "'cover.jpg' must be reserved for the cover image and not appear in the images array."
             )
+        }
+        guard depth == 1 || depth == 2 else {
+            fatalError("Only depth 1 or 2 is supported in this EPUB style.")
+        }
+        guard sections.allSatisfy({ $0.depth == depth }) else {
+            fatalError("All sections must have the same depth as specified by the depth parameter.")
+        }
+        if depth == 2 {
+            if sections.contains(where: { !$0.content.isEmpty }) {
+                fatalError("When depth is 2, top-level sections must not contain content.")
+            }
         }
 
         let coverPage = TextFile(
@@ -89,7 +138,7 @@ extension Book {
                     <nav epub:type="toc" id="nav">
                         <h1>Contents</h1>
                         <ol>
-                            \(chapters.enumerated().map { index, chapter in
+                            \(sections.enumerated().map { index, chapter in
                         "<li><a href=\"p-\(String(format: "%04d", index + 1)).xhtml\">\(chapter.title)</a></li>"
                     }.joined(separator: "\n"))
                         </ol>
@@ -107,32 +156,27 @@ extension Book {
                 </html>
                 """)
 
-        let contents = chapters.enumerated().map { (index, chapter) in
-            let body = chapter.content.map { content in
-                switch content {
-                case .text(let text):
-                    return "<p>\(text)</p>"
-                case .image(let source):
-                    return "<p><div class=\"sashie\"><img src=\"../images/\(source)\" /></div></p>"
-                case .lineBreak:
-                    return "<p><br/></p>"
+        var navigationPoints: [NavigationPoint] = []
+        let contents: [TextFile]
+        if depth == 1 {
+            contents = sections.enumerated().map { index, section in
+                let content = section.toHtmlStyle1
+                navigationPoints.append(NavigationPoint(label: section.title, source: "p-\(String(format: "%04d", index + 1)).xhtml"))
+                return TextFile(name: "p-\(String(format: "%04d", index + 1)).xhtml", content: content)
+            }
+        } else {
+            var contentCounter = 1
+            contents = sections.flatMap { section in
+                var navigationPoint = NavigationPoint(label: section.title, source: "p-\(String(format: "%04d", contentCounter)).xhtml")
+                let result = section.subsections.map { subsection in
+                    let subsectionContent = TextFile(name: "p-\(String(format: "%04d", contentCounter)).xhtml", content: subsection.toHtmlStyle1)
+                    navigationPoint.children.append(NavigationPoint(label: subsection.title, source: subsectionContent.name))
+                    contentCounter += 1
+                    return subsectionContent
                 }
-            }.joined(separator: "\n")
-            let content = """
-                <?xml version="1.0" encoding="utf-8"?>
-                <!DOCTYPE html>
-                <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja"
-                    xmlns:epub="http://www.idpf.org/2007/ops">
-                <head>
-                <link href="../style/reset.css" rel="stylesheet" type="text/css" />
-                <link rel="stylesheet" type="text/css" href="../style/bookstyle.css" />
-                <title>\(chapter.title)</title>
-                </head><body>
-                <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(chapter.title)</h1></div></div>
-                \(body)
-                </body></html>
-                """
-            return TextFile(name: "p-\(String(format: "%04d", index + 1)).xhtml", content: content)
+                navigationPoints.append(navigationPoint)
+                return result
+            }
         }
 
         let styles = [
@@ -362,7 +406,10 @@ extension Book {
         ]
 
         return EpubBook(
-            title: title, author: author, bookId: uuid, images: [JpgFile(name: "cover.jpg", data: cover)] + images, styles: styles,
-            contents: [coverPage, titlePage, navigationPage] + contents)
+            title: title, author: author, bookId: bookId, images: [JpgFile(name: "cover.jpg", data: cover)] + images, styles: styles,
+            contents: [coverPage, titlePage, navigationPage] + contents,
+            navigationPoints: sections.map { section in
+                NavigationPoint(label: section.title, source: "p-\(String(format: "%04d", sections.firstIndex(where: { $0.title == section.title })! + 1)).xhtml")
+            })
     }
 }
