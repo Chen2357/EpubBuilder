@@ -13,10 +13,13 @@ public struct EpubBook {
     public var coverImageName: String = "cover.jpg"
     public var navigationFileName: String = "nav.xhtml"
 
+    public var language: String = "ja"
+    public var pageProgressionDirection: String = "rtl"
+
     public init(
         title: String, author: String, bookId: UUID = UUID(), images: [JpgFile], styles: [TextFile],
         contents: [TextFile], navigationPoints: [NavigationPoint], coverImageName: String = "cover.jpg",
-        navigationFileName: String = "nav.xhtml"
+        navigationFileName: String = "nav.xhtml", language: String = "ja", pageProgressionDirection: String = "rtl"
     ) {
         guard contents.contains(where: { $0.name == navigationFileName }) else {
             fatalError("Navigation file with name \(navigationFileName) not found in contents.")
@@ -94,12 +97,12 @@ public extension EpubBook {
     var contentOpf: String {
         """
         <?xml version='1.0' encoding='utf-8'?>
-        <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookID" version="3.0" xml:lang="ja">
+        <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookID" version="3.0" xml:lang="\(language)">
         <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
             <dc:title id="title0">\(title)</dc:title>
             <dc:creator id="id">\(author)</dc:creator>
             <dc:identifier id="BookID">uuid:\(bookId.uuidString)</dc:identifier>
-            <dc:language>ja</dc:language>
+            <dc:language>\(language)</dc:language>
             <meta name="cover" content="images.\(coverImageName)"/>
         </metadata>
         <manifest>
@@ -132,7 +135,7 @@ public extension EpubBook {
             }.joined(separator: "\n"))
             <item id="toc" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
         </manifest>
-        <spine page-progression-direction="rtl" toc="toc">
+        <spine page-progression-direction="\(pageProgressionDirection)" toc="toc">
             \(contents.map { content in
                 if content.name == navigationFileName {
                     """
@@ -153,7 +156,7 @@ public extension EpubBook {
         var playOrder = 0
         return """
         <?xml version='1.0' encoding='utf-8'?>
-        <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="ja">
+        <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="\(language)">
         <head>
             <meta name="dtb:uid" content="urn:uuid:\(bookId.uuidString)"/>
             <meta name="dtb:depth" content="\(navigationDepth)"/>
