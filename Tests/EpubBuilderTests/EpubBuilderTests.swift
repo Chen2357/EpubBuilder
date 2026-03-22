@@ -70,6 +70,34 @@ extension URL {
     #expect(expected == actual)
 }
 
+@Test func example2() async throws {
+    let fileManager = FileManager.default
+    let currentDirectory = URL(fileURLWithPath: fileManager.currentDirectoryPath)
+
+    let cover = try Data(contentsOf: currentDirectory.appendingPathComponents("Tests", "EpubBuilderTests", "cover.jpg"))
+    let book = Book(title: "タイトル", author: "作者", cover: cover, images: [], sections: [
+        Section(title: "パート１", subsections: [
+            Section(title: "第１話", content: [
+                .text("第１話の内容です。"),
+            ]),
+            Section(title: "第２話", content: [
+                .text("第２話の内容です。"),
+            ])
+        ]),
+        Section(title: "パート２", subsections: [
+            Section(title: "第３話", content: [
+                .text("第３話の内容です。"),
+            ])
+        ])
+    ])
+    let bookEpub = book.toEpubStyle1(depth: 2, bookId: UUID(uuidString: "8900242B-DAFB-498C-8768-04813F9AFF46")!)
+
+    let outputPath = currentDirectory.appendingPathComponents("TestOutputs.nosync", "Example2")
+    try fileManager.ensureDirectoryExists(at: outputPath)
+
+    try bookEpub.write(to: outputPath)
+}
+
 @Test func navigationCntrol() async throws {
     let navigationPoint = NavigationPoint(label: "Chapter 1", source: "p-0001.xhtml", children: [
         NavigationPoint(label: "Episode 1", source: "p-0002.xhtml"),

@@ -28,7 +28,7 @@ public struct Section {
     public var content: [Content]
     public var subsections: [Section] = []
 
-    public init(title: String, content: [Content], subsections: [Section] = []) {
+    public init(title: String, content: [Content] = [], subsections: [Section] = []) {
         self.title = title
         self.content = content
         self.subsections = subsections
@@ -122,40 +122,6 @@ extension Book {
                 <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(title)</h1></div></div></body></html>
                 """)
 
-        let navigationPage = TextFile(
-            name: "nav.xhtml",
-            content: """
-                <?xml version='1.0' encoding='utf-8'?>
-                <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="ja" lang="ja">
-
-                <head>
-                    <link href="../style/reset.css" rel="stylesheet" type="text/css" />
-                    <link rel="stylesheet" type="text/css" href="../style/bookstyle.css" />
-                    <title>目次</title>
-                </head>
-
-                <body>
-                    <nav epub:type="toc" id="nav">
-                        <h1>Contents</h1>
-                        <ol>
-                            \(sections.enumerated().map { index, chapter in
-                        "<li><a href=\"p-\(String(format: "%04d", index + 1)).xhtml\">\(chapter.title)</a></li>"
-                    }.joined(separator: "\n"))
-                        </ol>
-                    </nav>
-                    <nav epub:type="landmarks" id="landmarks" hidden="hidden">
-                        <h2 style="margin-top:2em;">Guide</h2>
-                        <ol>
-                            <li><a epub:type="cover" href="cover.xhtml">表紙</a></li>
-                            <li><a epub:type="titlepage" href="title.xhtml">\(title)</a></li>
-                            <li><a epub:type="toc" href="nav.xhtml">目次</a></li>
-                        </ol>
-                    </nav>
-                </body>
-
-                </html>
-                """)
-
         var navigationPoints: [NavigationPoint] = []
         let contents: [TextFile]
         if depth == 1 {
@@ -178,6 +144,48 @@ extension Book {
                 return result
             }
         }
+
+        let navigation: String
+        if depth == 1 {
+            navigation = navigationPoints.map { point in
+                "<li><a href=\"\(point.source)\">\(point.label)</a></li>"
+            }.joined(separator: "\n")
+        } else {
+            navigation = navigationPoints.map { point in
+                """
+                <li><a href=\"\(point.source)\">\(point.label)</a>
+                <ol>
+                \(point.children.map { child in
+                    "<li><a href=\"\(child.source)\">\(child.label)</a></li>"
+                }.joined(separator: "\n"))
+                </ol>
+                </li>
+                """
+            }.joined(separator: "\n")
+        }
+        let navigationPage = TextFile(
+            name: "nav.xhtml",
+            content: """
+                <?xml version='1.0' encoding='utf-8'?>
+                <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="ja" lang="ja">
+
+                <head>
+                    <link href="../style/reset.css" rel="stylesheet" type="text/css" />
+                    <link rel="stylesheet" type="text/css" href="../style/bookstyle.css" />
+                    <title>目次</title>
+                </head>
+
+                <body>
+                    <nav epub:type="toc" id="nav">
+                        <h1>Contents</h1>
+                        <ol>
+                            \(navigation)
+                        </ol>
+                    </nav>
+                </body>
+
+                </html>
+                """)
 
         let styles = [
             TextFile(
