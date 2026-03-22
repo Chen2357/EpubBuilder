@@ -46,6 +46,7 @@ extension URL {
         }
         Folder("OEBPS") {
             File("content.opf")
+            File("toc.ncx")
             Folder("images") {
                 File("cover.jpg")
             }
@@ -96,6 +97,33 @@ extension URL {
     try fileManager.ensureDirectoryExists(at: outputPath)
 
     try bookEpub.write(to: outputPath)
+
+    @FileSystemNodeBuilder
+    var contentStructure: FileSystemNode {
+        File("mimetype")
+        Folder("META-INF") {
+            File("container.xml")
+        }
+        Folder("OEBPS") {
+            File("content.opf")
+            File("toc.ncx")
+            Folder("images") {
+                File("cover.jpg")
+            }
+            Folder("style") {
+                File("reset.css")
+                File("bookstyle.css")
+            }
+            Folder("text") {
+                File("cover.xhtml")
+                File("title.xhtml")
+                File("nav.xhtml")
+                File("p-0001.xhtml")
+                File("p-0002.xhtml")
+                File("p-0003.xhtml")
+            }
+        }
+    }
 }
 
 @Test func navigationCntrol() async throws {
