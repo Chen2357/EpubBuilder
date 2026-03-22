@@ -96,7 +96,7 @@ extension Book {
                 <head>
                 <link href="../style/reset.css" rel="stylesheet" type="text/css" />
                 <link rel="stylesheet" type="text/css" href="../style/bookstyle.css" />
-                <title>togetter</title>
+                <title>\(title)</title>
                 </head><body>
                 <div class="coverpage">
                 <img src="../images/cover.jpg" alt="cover" />
