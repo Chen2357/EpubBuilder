@@ -20,7 +20,6 @@ public struct Book {
 public enum Content {
     case text(String)
     case image(String)
-    case lineBreak
 }
 
 public struct Section {
@@ -49,8 +48,6 @@ extension Section {
                 return "<p>\(text)</p>"
             case .image(let source):
                 return "<p><div class=\"sashie\"><img src=\"../images/\(source)\" /></div></p>"
-            case .lineBreak:
-                return "<p><br/></p>"
             }
         }.joined(separator: "\n")
 
