@@ -70,7 +70,7 @@ func epubBook1() throws -> EpubBook {
     }
 
 @Test("Check if EpubBook1 can be written and read back correctly")
-func EpubBookTest1() async throws {
+func epubBook1Test() async throws {
     let book = try epubBook1()
     let outputURL = try getOutputFolderURL().appendingPathComponent("EpubBook1")
     try FileManager.default.ensureDirectoryExists(at: outputURL)
@@ -86,7 +86,7 @@ func EpubBookTest1() async throws {
 }
 
 @Test("Check content of EpubBook1")
-func EpubBook1ContentTest() async throws {
+func epubBook1ContentTest() async throws {
     let book = try epubBook1()
     let epub = book.epubFileSystemNode
 
