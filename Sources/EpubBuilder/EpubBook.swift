@@ -82,7 +82,7 @@ public extension EpubBook {
 
     enum NavigationSource {
         case content(name: String)
-        case standalone(body: String)
+        case standalone(`class`: String?, body: String)
     }
 }
 
@@ -154,9 +154,9 @@ extension EpubBook {
     }
 
     var navigationDocuments: String? {
-        guard case .standalone(let body) = navigationSource else { return nil }
+        guard case .standalone(let `class`, let body) = navigationSource else { return nil }
         return """
-        <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="\(language)">
+        <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="\(language)"\(`class`.map { " class=\"\($0)\"" } ?? "")>
         <head>
         <title>Navigation</title>
         </head>
