@@ -15,79 +15,79 @@ extension FileManager {
 }
 
 protocol FileSystemItem {
-    func addToFileStructure(_ structure: inout FileSystemNode)
+    func addToFileNode(_ node: inout FileSystemNode)
 }
 
-public struct File: FileSystemItem, Equatable {
-    public var name: String
-    public var data: Data?
+struct File: FileSystemItem, Equatable {
+    var name: String
+    var data: Data?
 
-    public init(_ name: String, data: Data? = nil) {
+    init(_ name: String, data: Data? = nil) {
         self.name = name
         self.data = data
     }
 
-    public init(_ name: String, text: String) {
+    init(_ name: String, text: String) {
         self.name = name
         self.data = text.data(using: .utf8)
     }
 
-    func addToFileStructure(_ structure: inout FileSystemNode) {
-        structure.files.append(self)
+    func addToFileNode(_ node: inout FileSystemNode) {
+        node.files.append(self)
     }
 }
 
-public struct Folder: FileSystemItem, Equatable {
-    public var name: String
-    public var node: FileSystemNode
-    public var files: [File] {
+struct Folder: FileSystemItem, Equatable {
+    var name: String
+    var node: FileSystemNode
+    var files: [File] {
         node.files
     }
-    public var subfolders: [Folder] {
+    var subfolders: [Folder] {
         node.folders
     }
 
-    public init(_ name: String, node: FileSystemNode) {
+    init(_ name: String, node: FileSystemNode) {
         self.name = name
         self.node = node
     }
 
-    public init(_ name: String, @FileSystemNodeBuilder _ content: () -> FileSystemNode) {
+    init(_ name: String, @FileSystemNodeBuilder _ content: () -> FileSystemNode) {
         self.init(name, node: content())
     }
 
-    public func addToFileStructure(_ structure: inout FileSystemNode) {
-        structure.folders.append(self)
+    func addToFileNode(_ node: inout FileSystemNode) {
+        node.folders.append(self)
     }
 }
 
-public struct FileSystemNode: FileSystemItem, Equatable {
-    public var files: [File]
-    public var folders: [Folder]
+struct FileSystemNode: FileSystemItem, Equatable {
+    var files: [File]
+    var folders: [Folder]
 
-    public init(files: [File] = [], folders: [Folder] = []) {
+    init(files: [File] = [], folders: [Folder] = []) {
         self.files = files
         self.folders = folders
     }
 
-    public init(@FileSystemNodeBuilder _ content: () -> FileSystemNode) {
+    init(@FileSystemNodeBuilder _ content: () -> FileSystemNode) {
         self = content()
     }
 
-    public static func + (lhs: FileSystemNode, rhs: FileSystemNode) -> FileSystemNode {
+    static func + (lhs: FileSystemNode, rhs: FileSystemNode) -> FileSystemNode {
         var combined = FileSystemNode()
         combined.files = lhs.files + rhs.files
         combined.folders = lhs.folders + rhs.folders
         return combined
     }
 
-    public func addToFileStructure(_ structure: inout FileSystemNode) {
-        structure.files += files
-        structure.folders += folders
+    func addToFileNode(_ node: inout FileSystemNode) {
+        node.files += files
+        node.folders += folders
     }
 }
 
-public extension FileSystemNode {
+extension FileSystemNode {
     func write(to url: URL) throws {
         let fileManager = FileManager.default
         for file in files {
@@ -132,7 +132,7 @@ struct FileSystemNodeBuilder {
     static func buildBlock<each T: FileSystemItem>(_ items: repeat each T) -> FileSystemNode {
         var structure = FileSystemNode()
         for item in repeat each items {
-            item.addToFileStructure(&structure)
+            item.addToFileNode(&structure)
         }
         return structure
     }
