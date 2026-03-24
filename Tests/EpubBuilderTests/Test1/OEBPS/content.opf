@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookID" version="3.0" xml:lang="ja">
+<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+<dc:title id="title0">タイトル</dc:title>
+<dc:creator id="id">作者</dc:creator>
+<meta refines="#id" property="role" scheme="marc:relators">aut</meta>
+<meta refines="#id" property="display-seq">1</meta>
+<dc:creator id="id-1">イラストレーター</dc:creator>
+<meta refines="#id-1" property="role" scheme="marc:relators">ill</meta>
+<meta refines="#id-1" property="display-seq">2</meta>
+<dc:identifier id="BookID">uuid:00000000-0000-0000-0000-000000000000</dc:identifier>
+<dc:language>ja</dc:language>
+<meta name="cover" content="images.cover.jpg"/>
+</metadata>
+<manifest>
+
+<item id="images.cover.jpg" href="images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>
+<item id="text.p-0001.xhtml" href="text/p-0001.xhtml" media-type="application/xhtml+xml"/>
+<item id="nav" href="navigation-documents.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+</manifest>
+<spine page-progression-direction="leftToRight">
+<itemref idref="text.p-0001.xhtml"/>
+</spine>
+</package>
