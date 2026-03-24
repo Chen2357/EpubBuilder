@@ -209,6 +209,9 @@ extension EpubBook {
         }
         Folder("OEBPS") {
             File("content.opf", text: contentOpf)
+            if let navigationDocuments = navigationDocuments {
+                File("navigation-documents.xhtml", text: navigationDocuments)
+            }
             Folder("images") {
                 for image in images {
                     File(image.name, data: image.data)

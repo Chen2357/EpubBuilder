@@ -140,4 +140,16 @@ struct FileSystemNodeBuilder {
     static func buildArray(_ components: [FileSystemNode]) -> FileSystemNode {
         components.reduce(FileSystemNode(), +)
     }
+
+    static func buildEither(first component: FileSystemNode) -> FileSystemNode {
+        component
+    }
+
+    static func buildEither(second component: FileSystemNode) -> FileSystemNode {
+        component
+    }
+
+    static func buildOptional(_ component: FileSystemNode?) -> FileSystemNode {
+        component ?? .init()
+    }
 }
