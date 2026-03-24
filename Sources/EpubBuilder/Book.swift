@@ -9,10 +9,10 @@ public struct Book<Content> {
 
     public var sections: [BookSection<Content>]
 
-    public var images: [EpubBook.ImageFile]
+    public var images: [ImageFile]
     public var coverImageName: String?
 
-    public init(title: String, creators: [EpubBook.Creator], language: String, sections: [BookSection<Content>], images: [EpubBook.ImageFile] = [], coverImageName: String? = nil) {
+    public init(title: String, creators: [EpubBook.Creator], language: String, sections: [BookSection<Content>], images: [ImageFile] = [], coverImageName: String? = nil) {
         self.title = title
         self.creators = creators
         self.language = language

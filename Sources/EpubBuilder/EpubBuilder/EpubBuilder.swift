@@ -4,9 +4,9 @@ public protocol EpubBuilder<Content> {
     associatedtype Content
 
     var pageProgressionDirection: EpubBook.PageProgressionDirection { get }
-    var styles: [EpubBook.StyleSheet] { get }
+    var styles: [StyleSheet] { get }
 
-    func buildContentPages(book: Book<Content>) -> [EpubBook.ContentPage]
+    func buildContentPages(book: Book<Content>) -> [ContentPage]
     func buildNavigationSource(book: Book<Content>) -> EpubBook.NavigationSource
 }
 
