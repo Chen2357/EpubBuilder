@@ -2,83 +2,91 @@ import Foundation
 
 public struct EpubBook {
     public var title: String
-    public var author: String
+    public var creators: [Creator]
     public var bookId: UUID = UUID()
+    public var language: String
+    public var pageProgressionDirection: PageProgressionDirection
 
-    public var images: [JpgFile]
-    public var styles: [TextFile]
-    public var contents: [TextFile]
-    public var navigationPoints: [NavigationPoint]
+    public var images: [ImageFile]
+    public var styles: [StyleSheet]
+    public var contents: [ContentPage]
 
-    public var coverImageName: String = "cover.jpg"
-    public var navigationFileName: String = "nav.xhtml"
-
-    public var language: String = "ja"
-    public var pageProgressionDirection: String = "rtl"
+    public var coverImageName: String?
+    public var navigationSource: NavigationSource
 
     public init(
-        title: String, author: String, bookId: UUID = UUID(), images: [JpgFile], styles: [TextFile],
-        contents: [TextFile], navigationPoints: [NavigationPoint], coverImageName: String = "cover.jpg",
-        navigationFileName: String = "nav.xhtml", language: String = "ja", pageProgressionDirection: String = "rtl"
+        title: String,
+        creators: [Creator],
+        bookId: UUID = UUID(),
+        language: String,
+        pageProgressionDirection: PageProgressionDirection = .leftToRight,
+        images: [ImageFile],
+        styles: [StyleSheet],
+        contents: [ContentPage],
+        coverImageName: String? = nil,
+        navigationSource: NavigationSource
     ) {
-        guard contents.contains(where: { $0.name == navigationFileName }) else {
-            fatalError("Navigation file with name \(navigationFileName) not found in contents.")
-        }
-        guard images.contains(where: { $0.name == coverImageName }) else {
-            fatalError("Cover image with name \(coverImageName) not found in images.")
-        }
-
         self.title = title
-        self.author = author
+        self.creators = creators
         self.bookId = bookId
+        self.language = language
+        self.pageProgressionDirection = pageProgressionDirection
+
         self.images = images
         self.styles = styles
         self.contents = contents
+
         self.coverImageName = coverImageName
-        self.navigationFileName = navigationFileName
-        self.navigationPoints = navigationPoints
-    }
-}
-
-public struct NavigationPoint {
-    public var label: String
-    public var source: String
-    public var children: [NavigationPoint]
-
-    public init(label: String, source: String, children: [NavigationPoint] = []) {
-        self.label = label
-        self.source = source
-        self.children = children
-    }
-
-    var depth: Int {
-        1 + (children.map(\.depth).max() ?? 0)
-    }
-
-    func navigationControlEntry(playOrder: inout Int) -> String {
-        let currentPlayOrder = playOrder
-        playOrder += 1
-
-        let childEntries = children.map { $0.navigationControlEntry(playOrder: &playOrder) }.joined(separator: "\n")
-
-        return """
-        <navPoint id="navPoint-\(currentPlayOrder)" playOrder="\(currentPlayOrder)">
-        <navLabel>
-        <text>\(label)</text>
-        </navLabel>
-        <content src="text/\(source)"/>
-        \(childEntries)</navPoint>
-        """
-    }
-}
-
-extension EpubBook {
-    var navigationDepth: Int {
-        navigationPoints.map(\.depth).max() ?? 1
+        self.navigationSource = navigationSource
     }
 }
 
 public extension EpubBook {
+    struct Creator {
+        public var name: String
+        public var role: String?
+
+        public enum Role: String {
+            case author = "aut"
+            case illustrator = "ill"
+        }
+
+        public init(name: String, role: Role? = nil) {
+            self.name = name
+            self.role = role?.rawValue
+        }
+
+        public init(name: String, role: String) {
+            self.name = name
+            self.role = role
+        }
+
+        func metadata(id: String) -> String {
+            let common = """
+            <dc:creator id="\(id)">\(name)</dc:creator>
+            """
+            if let role = role {
+                return common + """
+                \n<meta refines="#\(id)" property="role" scheme="marc:relators">\(role)</meta>
+                """
+            } else {
+                return common
+            }
+        }
+    }
+
+    enum PageProgressionDirection {
+        case leftToRight
+        case rightToLeft
+    }
+
+    enum NavigationSource {
+        case content(name: String)
+        case standalone(body: String)
+    }
+}
+
+extension EpubBook {
     static var mimetype: String {
         "application/epub+zip"
     }
@@ -94,82 +102,102 @@ public extension EpubBook {
         """
     }
 
+    var creatorMetadata: String {
+        if creators.count == 1 {
+            creators[0].metadata(id: "id")
+        } else {
+            creators.enumerated().map { (index, creator) in
+                """
+                \(creator.metadata(id: "\(index == 0 ? "id" : "id-\(index)")"))
+                <meta refines="#\("\(index == 0 ? "id" : "id-\(index)")")" property="display-seq">\(index + 1)</meta>
+                """
+            }.joined(separator: "\n")
+        }
+    }
+
+    var stylesheetItems: String {
+        styles.map { style in
+            """
+            <item id="style.\(style.name)" href="style/\(style.name)" media-type="text/css"/>
+            """
+        }.joined(separator: "\n")
+    }
+
+    var imageItems: String {
+        images.map { image in
+            """
+            <item id="images.\(image.name)" href="images/\(image.name)" media-type="image/\(image.mediaType)"\(image.name == coverImageName ? " properties=\"cover-image\"" : "")/>
+            """
+        }.joined(separator: "\n")
+    }
+
+    var contentItems: String {
+        switch navigationSource {
+        case .content(let name):
+            contents.map { content in
+                """
+                <item id="text.\(content.name)" href="text/\(content.name)" media-type="application/xhtml+xml"\(content.name == name ? " properties=\"nav\"" : "")/>
+                """
+            }.joined(separator: "\n")
+
+        case .standalone:
+            (contents.map { content in
+                """
+                <item id="text.\(content.name)" href="text/\(content.name)" media-type="application/xhtml+xml"/>
+                """
+            } + [
+                """
+                <item id="nav" href="navigation-documents.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+                """
+            ]).joined(separator: "\n")
+        }
+    }
+
+    var navigationDocuments: String? {
+        guard case .standalone(let body) = navigationSource else { return nil }
+        return """
+        <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="\(language)">
+        <head>
+        <title>Navigation</title>
+        </head>
+        <body>
+        \(body)
+        </body>
+        </html>
+        """
+    }
+
+    var spine: String {
+        contents.map { content in
+            """
+            <itemref idref="text.\(content.name)"\(content.linear == false ? " linear=\"no\"" : "")\(content.pageSpread.map { " properties=\"page-spread-\($0)\"" } ?? "")/>
+            """
+        }.joined(separator: "\n")
+    }
+
     var contentOpf: String {
         """
         <?xml version='1.0' encoding='utf-8'?>
         <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookID" version="3.0" xml:lang="\(language)">
         <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
-            <dc:title id="title0">\(title)</dc:title>
-            <dc:creator id="id">\(author)</dc:creator>
-            <dc:identifier id="BookID">uuid:\(bookId.uuidString)</dc:identifier>
-            <dc:language>\(language)</dc:language>
-            <meta name="cover" content="images.\(coverImageName)"/>
+        <dc:title id="title0">\(title)</dc:title>
+        \(creatorMetadata)
+        <dc:identifier id="BookID">uuid:\(bookId.uuidString)</dc:identifier>
+        <dc:language>\(language)</dc:language>
+        \(coverImageName.map { """
+        <meta name="cover" content="images.\($0)"/>
+        """} ?? "")
         </metadata>
         <manifest>
-            \(contents.map { content in
-                if content.name == navigationFileName {
-                    """
-                    <item id="nav" href="text/\(content.name)" media-type="application/xhtml+xml" properties="nav"/>
-                    """
-                } else {
-                    """
-                    <item id="text.\(content.name)" href="text/\(content.name)" media-type="application/xhtml+xml"/>
-                    """
-                }
-            }.joined(separator: "\n"))
-            \(images.map { image in
-                if image.name == coverImageName {
-                    """
-                    <item id="images.\(image.name)" href="images/\(image.name)" media-type="image/jpeg" properties="cover-image"/>
-                    """
-                } else {
-                    """
-                    <item id="images.\(image.name)" href="images/\(image.name)" media-type="image/jpeg"/>
-                    """
-                }
-            }.joined(separator: "\n"))
-            \(styles.map { style in
-                """
-                <item id="style.\(style.name)" href="style/\(style.name)" media-type="text/css"/>
-                """
-            }.joined(separator: "\n"))
-            <item id="toc" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+        \(stylesheetItems)
+        \(imageItems)
+        \(contentItems)
+        \(navigationDocuments ?? "")
         </manifest>
-        <spine page-progression-direction="\(pageProgressionDirection)" toc="toc">
-            \(contents.map { content in
-                if content.name == navigationFileName {
-                    """
-                    <itemref idref="nav"/>
-                    """
-                } else {
-                    """
-                    <itemref idref="text.\(content.name)"/>
-                    """
-                }
-            }.joined(separator: "\n"))
+        <spine page-progression-direction="\(pageProgressionDirection)">
+        \(spine)
         </spine>
         </package>
-        """
-    }
-
-    var tableOfContents: String {
-        var playOrder = 0
-        return """
-        <?xml version='1.0' encoding='utf-8'?>
-        <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="\(language)">
-        <head>
-            <meta name="dtb:uid" content="urn:uuid:\(bookId.uuidString)"/>
-            <meta name="dtb:depth" content="\(navigationDepth)"/>
-            <meta name="dtb:totalPageCount" content="0"/>
-            <meta name="dtb:maxPageNumber" content="0"/>
-        </head>
-        <docTitle>
-            <text>\(title)</text>
-        </docTitle>
-        <navMap>
-        \(navigationPoints.map { $0.navigationControlEntry(playOrder: &playOrder) }.joined(separator: "\n"))
-        </navMap>
-        </ncx>
         """
     }
 
@@ -181,7 +209,6 @@ public extension EpubBook {
         }
         Folder("OEBPS") {
             File("content.opf", text: contentOpf)
-            File("toc.ncx", text: tableOfContents)
             Folder("images") {
                 for image in images {
                     File(image.name, data: image.data)
@@ -194,13 +221,13 @@ public extension EpubBook {
             }
             Folder("text") {
                 for content in contents {
-                    File(content.name, text: content.content)
+                    File(content.name, text: content.html)
                 }
             }
         }
     }
 
-    func write(to url: URL) throws {
+    public func write(to url: URL) throws {
         try epubFileSystemNode.write(to: url)
     }
 }
