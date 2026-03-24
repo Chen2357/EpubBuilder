@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import EpubBuilder
 
 func epubBook1() throws -> EpubBook {
@@ -49,25 +50,25 @@ func epubBook1() throws -> EpubBook {
 }
 
 @FileSystemNodeBuilder
-    var epubBook1FileSystemContent: FileSystemNode {
-        File("mimetype")
-        Folder("META-INF") {
-            File("container.xml")
+var epubBook1FileSystemContent: FileSystemNode {
+    File("mimetype")
+    Folder("META-INF") {
+        File("container.xml")
+    }
+    Folder("OEBPS") {
+        File("content.opf")
+        Folder("images") {
+            File("cover.jpg")
         }
-        Folder("OEBPS") {
-            File("content.opf")
-            Folder("images") {
-                File("cover.jpg")
-            }
-            Folder("style") {
-                File("bookstyle.css")
-            }
-            Folder("text") {
-                File("nav.xhtml")
-                File("p-1.xhtml")
-            }
+        Folder("style") {
+            File("bookstyle.css")
+        }
+        Folder("text") {
+            File("nav.xhtml")
+            File("p-1.xhtml")
         }
     }
+}
 
 @Test("Check if EpubBook1 can be written and read back correctly")
 func epubBook1Test() async throws {
