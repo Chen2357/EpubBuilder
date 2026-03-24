@@ -192,7 +192,6 @@ extension EpubBook {
         \(stylesheetItems)
         \(imageItems)
         \(contentItems)
-        \(navigationDocuments ?? "")
         </manifest>
         <spine page-progression-direction="\(pageProgressionDirection)">
         \(spine)
