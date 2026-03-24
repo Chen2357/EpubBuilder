@@ -2,25 +2,6 @@ import Testing
 @testable import EpubBuilder
 import Foundation
 
-func getOutputFolderURL() throws -> URL {
-    let fileManager = FileManager.default
-    let projectRoot = URL(fileURLWithPath: fileManager.currentDirectoryPath)
-    let outputFolder = projectRoot.appendingPathComponent("TestOutputs.nosync")
-
-    if !fileManager.fileExists(atPath: outputFolder.path) {
-        try fileManager.createDirectory(at: outputFolder, withIntermediateDirectories: true)
-    }
-    return outputFolder
-}
-
-extension URL {
-    func appendingPathComponents(_ components: String...) -> URL {
-        components.reduce(self) { url, component in
-            url.appendingPathComponent(component)
-        }
-    }
-}
-
 // @Test func example() async throws {
 //     let fileManager = FileManager.default
 //     let currentDirectory = URL(fileURLWithPath: fileManager.currentDirectoryPath)
@@ -98,32 +79,32 @@ extension URL {
 
 //     try bookEpub.write(to: outputPath)
 
-//     @FileSystemNodeBuilder
-//     var contentStructure: FileSystemNode {
-//         File("mimetype")
-//         Folder("META-INF") {
-//             File("container.xml")
-//         }
-//         Folder("OEBPS") {
-//             File("content.opf")
-//             File("toc.ncx")
-//             Folder("images") {
-//                 File("cover.jpg")
-//             }
-//             Folder("style") {
-//                 File("reset.css")
-//                 File("bookstyle.css")
-//             }
-//             Folder("text") {
-//                 File("cover.xhtml")
-//                 File("title.xhtml")
-//                 File("nav.xhtml")
-//                 File("p-0001.xhtml")
-//                 File("p-0002.xhtml")
-//                 File("p-0003.xhtml")
-//             }
-//         }
-//     }
+    // @FileSystemNodeBuilder
+    // var contentStructure: FileSystemNode {
+    //     File("mimetype")
+    //     Folder("META-INF") {
+    //         File("container.xml")
+    //     }
+    //     Folder("OEBPS") {
+    //         File("content.opf")
+    //         File("toc.ncx")
+    //         Folder("images") {
+    //             File("cover.jpg")
+    //         }
+    //         Folder("style") {
+    //             File("reset.css")
+    //             File("bookstyle.css")
+    //         }
+    //         Folder("text") {
+    //             File("cover.xhtml")
+    //             File("title.xhtml")
+    //             File("nav.xhtml")
+    //             File("p-0001.xhtml")
+    //             File("p-0002.xhtml")
+    //             File("p-0003.xhtml")
+    //         }
+    //     }
+    // }
 // }
 
 // @Test func navigationCntrol() async throws {
