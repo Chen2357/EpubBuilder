@@ -9,7 +9,7 @@ func epubBook1() throws -> EpubBook {
             .init(name: "Alice", role: .author),
             .init(name: "Bob", role: .illustrator),
         ],
-        bookId: .init(uuidString: "00000000-0000-0000-0000-000000000000")!,
+        bookId: .zero,
         language: "en",
         images: [
             .init(name: "cover.jpg", data: try getCoverImageData(), mediaType: .jpeg)

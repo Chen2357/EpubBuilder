@@ -41,3 +41,9 @@ extension Data {
         String(data: self, encoding: encoding)
     }
 }
+
+extension UUID {
+    static var zero: UUID {
+        UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+    }
+}
