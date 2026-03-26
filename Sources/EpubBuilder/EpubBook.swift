@@ -48,7 +48,9 @@ public extension EpubBook {
 
         public enum Role: String {
             case author = "aut"
+            case editor = "edt"
             case illustrator = "ill"
+            case translator = "trl"
         }
 
         public init(name: String, role: Role? = nil) {
