@@ -58,6 +58,8 @@ public struct ContentPage {
     public var head: Head
     public var body: String
 
+    public var isInSpine: Bool
+
     public var linear: Bool
     public var pageSpread: PageSpread?
 
@@ -67,7 +69,7 @@ public struct ContentPage {
     }
 
     public init(
-        name: String, language: String, head: Head, body: String, `class`: String? = nil, linear: Bool = true, pageSpread: PageSpread? = nil
+        name: String, language: String, head: Head, body: String, `class`: String? = nil, isInSpine: Bool = true, linear: Bool = true, pageSpread: PageSpread? = nil
     ) {
         self.name = name
         self.language = language
@@ -76,6 +78,7 @@ public struct ContentPage {
         self.class = `class`
         self.linear = linear
         self.pageSpread = pageSpread
+        self.isInSpine = isInSpine
     }
 
     var html: String { """

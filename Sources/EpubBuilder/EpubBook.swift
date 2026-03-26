@@ -168,7 +168,7 @@ extension EpubBook {
     }
 
     var spine: String {
-        contents.map { content in
+        contents.filter(\.isInSpine).map { content in
             """
             <itemref idref="text.\(content.name)"\(content.linear == false ? " linear=\"no\"" : "")\(content.pageSpread.map { " properties=\"page-spread-\($0)\"" } ?? "")/>
             """
