@@ -45,7 +45,7 @@ func epubBook1() throws -> EpubBook {
                     """),
         ],
         coverImageName: "cover.jpg",
-        navigationSource: .content(name: "nav.xhtml")
+        navigationFileName: "nav.xhtml"
     )
 }
 
@@ -130,7 +130,6 @@ func epubBook1ContentTest() async throws {
             <item id="images.cover.jpg" href="images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>
             <item id="text.nav.xhtml" href="text/nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
             <item id="text.p-1.xhtml" href="text/p-1.xhtml" media-type="application/xhtml+xml"/>
-
             </manifest>
             <spine page-progression-direction="leftToRight">
             <itemref idref="text.nav.xhtml"/>

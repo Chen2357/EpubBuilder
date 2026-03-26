@@ -12,7 +12,7 @@ public struct EpubBook {
     public var contents: [ContentPage]
 
     public var coverImageName: String?
-    public var navigationSource: NavigationSource
+    public var navigationFileName: String?
 
     public init(
         title: String,
@@ -24,7 +24,7 @@ public struct EpubBook {
         styles: [StyleSheet],
         contents: [ContentPage],
         coverImageName: String? = nil,
-        navigationSource: NavigationSource
+        navigationFileName: String? = nil
     ) {
         self.title = title
         self.creators = creators
@@ -37,7 +37,7 @@ public struct EpubBook {
         self.contents = contents
 
         self.coverImageName = coverImageName
-        self.navigationSource = navigationSource
+        self.navigationFileName = navigationFileName
     }
 }
 
@@ -80,11 +80,6 @@ public extension EpubBook {
     enum PageProgressionDirection {
         case leftToRight
         case rightToLeft
-    }
-
-    enum NavigationSource {
-        case content(name: String)
-        case standalone(`class`: String?, body: String)
     }
 }
 
@@ -134,39 +129,11 @@ extension EpubBook {
     }
 
     var contentItems: String {
-        switch navigationSource {
-        case .content(let name):
-            contents.map { content in
-                """
-                <item id="text.\(content.name)" href="text/\(content.name)" media-type="application/xhtml+xml"\(content.name == name ? " properties=\"nav\"" : "")/>
-                """
-            }.joined(separator: "\n")
-
-        case .standalone:
-            (contents.map { content in
-                """
-                <item id="text.\(content.name)" href="text/\(content.name)" media-type="application/xhtml+xml"/>
-                """
-            } + [
-                """
-                <item id="nav" href="navigation-documents.xhtml" media-type="application/xhtml+xml" properties="nav"/>
-                """
-            ]).joined(separator: "\n")
-        }
-    }
-
-    var navigationDocuments: String? {
-        guard case .standalone(let `class`, let body) = navigationSource else { return nil }
-        return """
-        <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="\(language)"\(`class`.map { " class=\"\($0)\"" } ?? "")>
-        <head>
-        <title>Navigation</title>
-        </head>
-        <body>
-        \(body)
-        </body>
-        </html>
-        """
+        contents.map { content in
+            """
+            <item id="text.\(content.name)" href="text/\(content.name)" media-type="application/xhtml+xml"\(content.name == navigationFileName ? " properties=\"nav\"" : "")/>
+            """
+        }.joined(separator: "\n")
     }
 
     var spine: String {
@@ -210,9 +177,6 @@ extension EpubBook {
         }
         Folder("OEBPS") {
             File("content.opf", text: contentOpf)
-            if let navigationDocuments = navigationDocuments {
-                File("navigation-documents.xhtml", text: navigationDocuments)
-            }
             Folder("images") {
                 for image in images {
                     File(image.name, data: image.data)

@@ -5,9 +5,9 @@ public protocol EpubBuilder<Content> {
 
     var pageProgressionDirection: EpubBook.PageProgressionDirection { get }
     var styles: [StyleSheet] { get }
+    var navigationFileName: String? { get }
 
     func buildContentPages(book: Book<Content>) -> [ContentPage]
-    func buildNavigationSource(book: Book<Content>) -> EpubBook.NavigationSource
 }
 
 public extension Book {
@@ -22,7 +22,7 @@ public extension Book {
             styles: builder.styles,
             contents: builder.buildContentPages(book: self),
             coverImageName: coverImageName,
-            navigationSource: builder.buildNavigationSource(book: self)
+            navigationFileName: builder.navigationFileName
         )
     }
 }
