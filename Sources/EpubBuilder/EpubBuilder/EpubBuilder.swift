@@ -1,17 +1,15 @@
 import Foundation
 
-public protocol EpubBuilder<Content> {
-    associatedtype Content
-
+public protocol EpubBuilder {
     var pageProgressionDirection: EpubBook.PageProgressionDirection { get }
     var styles: [StyleSheet] { get }
     var navigationFileName: String? { get }
 
-    func buildContentPages(book: Book<Content>) -> [ContentPage]
+    func buildContentPages(book: Book) -> [ContentPage]
 }
 
 public extension Book {
-    func toEpub<B: EpubBuilder>(builder: B, bookId: UUID = UUID()) -> EpubBook where B.Content == Content {
+    func toEpub<Builder: EpubBuilder>(builder: Builder, bookId: UUID = UUID()) -> EpubBook {
         EpubBook(
             title: title,
             creators: creators,

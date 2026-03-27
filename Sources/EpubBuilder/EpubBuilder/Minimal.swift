@@ -1,6 +1,6 @@
 import Foundation
 
-public struct MinimalEpubBuilder<Content> {
+public struct MinimalEpubBuilder: EpubBuilder {
     public var pageProgressionDirection: EpubBook.PageProgressionDirection
     public var styles: [StyleSheet] { [] }
     public var navigationFileName: String? { nil }
@@ -9,7 +9,7 @@ public struct MinimalEpubBuilder<Content> {
         self.pageProgressionDirection = pageProgressionDirection
     }
 
-    func contentBody(section: BookSection<[SimpleBlock]>) -> String {
+    func contentBody(section: BookSection) -> String {
         section.content.map { content in
             switch content {
             case .paragraph(let text):
@@ -19,10 +19,8 @@ public struct MinimalEpubBuilder<Content> {
             }
         }.joined(separator: "\n")
     }
-}
 
-extension MinimalEpubBuilder: EpubBuilder where Content == [SimpleBlock] {
-    public func buildContentPages(book: Book<Content>) -> [ContentPage] {
+    public func buildContentPages(book: Book) -> [ContentPage] {
         book.sections.enumerated().map { (index, section) in
             ContentPage(
                 name: "p-\(String(format: "%04d", index + 1)).xhtml", language: book.language,

@@ -1,18 +1,16 @@
 import Foundation
 
-// public protocol BookContent { }
-
-public struct Book<Content> {
+public struct Book {
     public var title: String
     public var creators: [EpubBook.Creator]
     public var language: String
 
-    public var sections: [BookSection<Content>]
+    public var sections: [BookSection]
 
     public var images: [ImageFile]
     public var coverImageName: String?
 
-    public init(title: String, creators: [EpubBook.Creator], language: String, sections: [BookSection<Content>], images: [ImageFile] = [], coverImageName: String? = nil) {
+    public init(title: String, creators: [EpubBook.Creator], language: String, sections: [BookSection], images: [ImageFile] = [], coverImageName: String? = nil) {
         self.title = title
         self.creators = creators
         self.language = language
@@ -22,29 +20,15 @@ public struct Book<Content> {
     }
 }
 
-public struct BookSection<Content> {
+public struct BookSection {
     public var title: String
-    public var content: Content
-    public var subsections: [BookSection<Content>] = []
+    public var content: [ContentBlock]
+    public var subsections: [BookSection] = []
 
-    public init(title: String, content: Content, subsections: [BookSection<Content>] = []) {
+    public init(title: String, content: [ContentBlock], subsections: [BookSection] = []) {
         self.title = title
         self.content = content
         self.subsections = subsections
-    }
-}
-
-public enum SimpleBlock {
-    case paragraph(String)
-    case image(String)
-}
-
-public extension Book {
-    func mapContent<T>(_ transform: (Content) -> T) -> Book<T> {
-        let newSections = sections.map { section in
-            section.mapContent(transform)
-        }
-        return Book<T>(title: title, creators: creators, language: language, sections: newSections, images: images, coverImageName: coverImageName)
     }
 }
 
@@ -52,12 +36,9 @@ public extension BookSection {
     var depth: Int {
         1 + (subsections.map(\.depth).max() ?? 0)
     }
+}
 
-    func mapContent<T>(_ transform: (Content) -> T) -> BookSection<T> {
-        let newContent = transform(content)
-        let newSubsections = subsections.map { subsection in
-            subsection.mapContent(transform)
-        }
-        return .init(title: title, content: newContent, subsections: newSubsections)
-    }
+public enum ContentBlock {
+    case paragraph(String)
+    case image(String)
 }

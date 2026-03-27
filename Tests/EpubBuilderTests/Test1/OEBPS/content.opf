@@ -16,7 +16,6 @@
 
 <item id="images.cover.jpg" href="images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>
 <item id="text.p-0001.xhtml" href="text/p-0001.xhtml" media-type="application/xhtml+xml"/>
-<item id="nav" href="navigation-documents.xhtml" media-type="application/xhtml+xml" properties="nav"/>
 </manifest>
 <spine page-progression-direction="leftToRight">
 <itemref idref="text.p-0001.xhtml"/>
