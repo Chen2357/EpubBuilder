@@ -9,7 +9,7 @@ public protocol EpubBuilder {
 }
 
 public extension Book {
-    func toEpub<Builder: EpubBuilder>(builder: Builder, bookId: UUID = UUID()) -> EpubBook {
+    func toEpub(builder: some EpubBuilder, bookId: UUID = UUID()) -> EpubBook {
         EpubBook(
             title: title,
             creators: creators,
