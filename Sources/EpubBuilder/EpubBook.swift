@@ -77,9 +77,9 @@ public extension EpubBook {
         }
     }
 
-    enum PageProgressionDirection {
-        case leftToRight
-        case rightToLeft
+    enum PageProgressionDirection: String {
+        case leftToRight = "ltr"
+        case rightToLeft = "rtl"
     }
 }
 
@@ -162,7 +162,7 @@ extension EpubBook {
         \(imageItems)
         \(contentItems)
         </manifest>
-        <spine page-progression-direction="\(pageProgressionDirection)">
+        <spine page-progression-direction="\(pageProgressionDirection.rawValue)">
         \(spine)
         </spine>
         </package>
