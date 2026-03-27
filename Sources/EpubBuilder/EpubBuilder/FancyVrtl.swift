@@ -287,7 +287,7 @@ extension FancyVrtlEpubBuilder {
             language: book.language,
             head: .init(title: book.title, styles: ["reset.css", "bookstyle.css"]),
             body: """
-                <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(book.title)</h1></div></div>"
+                <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(book.title)</h1></div></div>
                 """
         )
     }
@@ -323,7 +323,7 @@ extension FancyVrtlEpubBuilder {
         case .one:
             let items = book.sections.enumerated().map { (index, section) in
                 let title = sectionTitleFormatter([index + 1], section.title)
-                return "<li><a href=\"text/p-\(String(format: "%04d", index + 1)).xhtml\">\(title)</a></li>"
+                return "<li><a href=\"p-\(String(format: "%04d", index + 1)).xhtml\">\(title)</a></li>"
             }.joined(separator: "\n")
             return """
                 <nav epub:type="toc">
@@ -338,13 +338,13 @@ extension FancyVrtlEpubBuilder {
             var items: [String] = []
             for (index, section) in book.sections.enumerated() {
                 let sectionTitle = sectionTitleFormatter([index + 1], section.title)
-                items.append("<li><a href=\"text/p-\(String(format: "%04d", pageCounter + 1)).xhtml\">\(sectionTitle)</a>")
+                items.append("<li><a href=\"p-\(String(format: "%04d", pageCounter + 1)).xhtml\">\(sectionTitle)</a>")
                 if !section.subsections.isEmpty {
                     items.append("<ol>")
                     for (subIndex, subsection) in section.subsections.enumerated() {
                         pageCounter += 1
                         let subsectionTitle = sectionTitleFormatter([index + 1, subIndex + 1], subsection.title)
-                        items.append("<li><a href=\"text/p-\(String(format: "%04d", pageCounter)).xhtml\">\(subsectionTitle)</a></li>")
+                        items.append("<li><a href=\"p-\(String(format: "%04d", pageCounter)).xhtml\">\(subsectionTitle)</a></li>")
                     }
                     items.append("</ol>")
                 }
