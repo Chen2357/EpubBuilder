@@ -81,7 +81,7 @@ func book2() throws -> Book {
 
 @Test("Test depth one navigation document generation")
 func testBook2Navigation() throws {
-    let builder = FancyVrtlEpubBuilder<String>(
+    let builder = FancyVrtlEpubBuilder(
         depth: .one,
         sectionTitleFormatter: { number, title in
             "#\(number[0]). \(title)"
@@ -103,13 +103,13 @@ func testBook2Navigation() throws {
 
 @Test("Test depth one Epub generation")
 func testBook2Epub() throws {
-    let book = try book2().toEpub(builder: FancyVrtlEpubBuilder<String>(
+    let book = try book2().toEpub(builder: FancyVrtlEpubBuilder(
         depth: .one,
         sectionTitleFormatter: { number, title in
             "#\(number[0]). \(title)"
         }
     ), bookId: .zero)
-    let outputURL = try getOutputFolderURL().appendingPathComponent("TestBook2")
+    let outputURL = try getOutputFolderURL().appendingPathComponent("Book2")
     try FileManager.default.ensureDirectoryExists(at: outputURL)
     try book.write(to: outputURL)
 }
@@ -153,7 +153,7 @@ func book3() throws -> Book {
 
 @Test("Test depth two navigation document generation")
 func testBook3Navigation() throws {
-    let builder = FancyVrtlEpubBuilder<[ContentBlock]>(
+    let builder = FancyVrtlEpubBuilder(
         depth: .two,
         sectionTitleFormatter: { number, title in
             if number.count == 1 {

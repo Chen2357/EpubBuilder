@@ -1,6 +1,6 @@
 import Foundation
 
-public struct FancyVrtlEpubBuilder<Content> {
+public struct FancyVrtlEpubBuilder {
     public var pageProgressionDirection: EpubBook.PageProgressionDirection { .rightToLeft }
     public var styles: [StyleSheet] {
         [
