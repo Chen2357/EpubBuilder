@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import ZIPFoundation
 
 @testable import EpubBuilder
 
@@ -187,4 +188,12 @@ func epubBook1ContentTest() async throws {
             </body>
             </html>
             """)
+}
+
+@Test func outputEpubBook1() async throws {
+    let book = try epubBook1()
+    let outputURL = try getOutputFolderURL().appendingPathComponent("EpubBook1")
+    try FileManager.default.ensureDirectoryExists(at: outputURL)
+
+    try book.writeEpub(to: outputURL.appendingPathComponent("EpubBook1.epub"))
 }

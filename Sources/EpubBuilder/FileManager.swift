@@ -1,4 +1,5 @@
 import Foundation
+import ZIPFoundation
 
 extension FileManager {
     func ensureFileExists(at url: URL) throws {
@@ -123,6 +124,16 @@ extension FileSystemNode {
             if fileManager.fileExists(atPath: folderURL.path) {
                 try folders[i].node.load(at: folderURL)
             }
+        }
+    }
+
+    func addToArchive(_ archive: Archive, relativeTo path: String = "") throws {
+        for file in files {
+            let data = file.data ?? Data()
+            try archive.addEntry(with: path + file.name, type: .file, uncompressedSize: Int64(data.count), provider: { position, size in return data.subdata(in: Data.Index(position)..<Int(position) + size) })
+        }
+        for folder in folders {
+            try folder.node.addToArchive(archive, relativeTo: path + folder.name + "/")
         }
     }
 }

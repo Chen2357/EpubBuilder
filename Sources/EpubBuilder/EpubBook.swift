@@ -1,4 +1,5 @@
 import Foundation
+import ZIPFoundation
 
 public struct EpubBook {
     public var title: String
@@ -197,5 +198,15 @@ extension EpubBook {
 
     public func write(to url: URL) throws {
         try epubFileSystemNode.write(to: url)
+    }
+
+    public func epubData() throws -> Data {
+        let archive = try Archive(accessMode: .create)
+        try epubFileSystemNode.addToArchive(archive)
+        return archive.data!
+    }
+
+    public func writeEpub(to url: URL) throws {
+        try epubData().write(to: url)
     }
 }

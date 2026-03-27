@@ -10,9 +10,15 @@ let package = Package(
             targets: ["EpubBuilder"]
         ),
     ],
+    dependencies: [
+        .package(url: "https://github.com/weichsel/ZIPFoundation.git", .upToNextMajor(from: "0.9.0")),
+    ],
     targets: [
         .target(
-            name: "EpubBuilder"
+            name: "EpubBuilder",
+            dependencies: [
+                .product(name: "ZIPFoundation", package: "ZIPFoundation"),
+            ]
         ),
         .testTarget(
             name: "EpubBuilderTests",
