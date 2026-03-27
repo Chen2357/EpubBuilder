@@ -232,8 +232,6 @@ public struct FancyVrtlEpubBuilder {
 
     public var depth: Depth
     public var colophon: [ColophonElement]?
-    public var useHorizontalNavigation: Bool
-    public var sectionTitleFormatter: (([Int], String) -> String) = { _, title in title }
 
     public var navigationFileName: String? { "nav.xhtml" }
 
@@ -255,14 +253,10 @@ public struct FancyVrtlEpubBuilder {
 
     public init(
         depth: Depth,
-        colophon: [ColophonElement]? = nil,
-        useHorizontalNavigation: Bool = false,
-        sectionTitleFormatter: @escaping (([Int], String) -> String) = { _, title in title },
+        colophon: [ColophonElement]? = nil
     ) {
         self.depth = depth
         self.colophon = colophon
-        self.useHorizontalNavigation = useHorizontalNavigation
-        self.sectionTitleFormatter = sectionTitleFormatter
     }
 }
 
@@ -322,8 +316,7 @@ extension FancyVrtlEpubBuilder {
         switch depth {
         case .one:
             let items = book.sections.enumerated().map { (index, section) in
-                let title = sectionTitleFormatter([index + 1], section.title)
-                return "<li><a href=\"p-\(String(format: "%04d", index + 1)).xhtml\">\(title)</a></li>"
+                return "<li><a href=\"p-\(String(format: "%03d", index + 1)).xhtml\">\(section.title)</a></li>"
             }.joined(separator: "\n")
             return """
                 <nav epub:type="toc">
@@ -336,15 +329,13 @@ extension FancyVrtlEpubBuilder {
         case .two:
             var pageCounter = 0
             var items: [String] = []
-            for (index, section) in book.sections.enumerated() {
-                let sectionTitle = sectionTitleFormatter([index + 1], section.title)
-                items.append("<li><a href=\"p-\(String(format: "%04d", pageCounter + 1)).xhtml\">\(sectionTitle)</a>")
+            for section in book.sections {
+                items.append("<li><a href=\"p-\(String(format: "%03d", pageCounter + 1)).xhtml\">\(section.title)</a>")
                 if !section.subsections.isEmpty {
                     items.append("<ol>")
-                    for (subIndex, subsection) in section.subsections.enumerated() {
+                    for subsection in section.subsections {
                         pageCounter += 1
-                        let subsectionTitle = sectionTitleFormatter([index + 1, subIndex + 1], subsection.title)
-                        items.append("<li><a href=\"p-\(String(format: "%04d", pageCounter)).xhtml\">\(subsectionTitle)</a></li>")
+                        items.append("<li><a href=\"p-\(String(format: "%03d", pageCounter)).xhtml\">\(subsection.title)</a></li>")
                     }
                     items.append("</ol>")
                 }
@@ -377,14 +368,14 @@ extension FancyVrtlEpubBuilder {
         case .one:
             return book.sections.map { section in
                 counter += 1
-                return ("p-\(String(format: "%04d", counter)).xhtml", [])
+                return ("p-\(String(format: "%03d", counter)).xhtml", [])
             }
         case .two:
             return book.sections.map { section in
-                let thisSectionName = "p-\(String(format: "%04d", counter + 1)).xhtml"
+                let thisSectionName = "p-\(String(format: "%03d", counter + 1)).xhtml"
                 let subsectionNames = section.subsections.map { subsection in
                     counter += 1
-                    return "p-\(String(format: "%04d", counter)).xhtml"
+                    return "p-\(String(format: "%03d", counter)).xhtml"
                 }
                 return (thisSectionName, subsectionNames)
             }
@@ -403,7 +394,9 @@ extension FancyVrtlEpubBuilder: EpubBuilder {
             }
         }.joined(separator: "\n")
         return """
-            <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(section.title)</h1></div></div>
+            <p><br/></p>
+            <div class="tobira-text" style="font-size: 1.30em">\(section.title)</div>
+            <p><br/></p>
             \(body)
             """
     }
@@ -438,6 +431,10 @@ extension FancyVrtlEpubBuilder: EpubBuilder {
                     )
                 }
             }
+        }
+
+        guard contentPages.count <= 999 else {
+            fatalError("Too many content pages. The current implementation supports up to 999 pages.")
         }
 
         return [buildCoverPage(book: book), buildTitlePage(book: book), buildVerticalNavigationPage(book: book)].compactMap { $0 }
