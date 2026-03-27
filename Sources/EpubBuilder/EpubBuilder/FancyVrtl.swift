@@ -303,7 +303,8 @@ extension FancyVrtlEpubBuilder {
             name: "colophon.xhtml",
             language: book.language,
             head: .init(title: book.title, styles: ["reset.css"]),
-            body: body
+            body: body,
+            pageSpread: .right
         )
     }
 
@@ -330,7 +331,8 @@ extension FancyVrtlEpubBuilder {
             var pageCounter = 0
             var items: [String] = []
             for section in book.sections {
-                items.append("<li><a href=\"p-\(String(format: "%03d", pageCounter + 1)).xhtml\">\(section.title)</a>")
+                pageCounter += 1
+                items.append("<li><a href=\"p-\(String(format: "%03d", pageCounter)).xhtml\">\(section.title)</a>")
                 if !section.subsections.isEmpty {
                     items.append("<ol>")
                     for subsection in section.subsections {
@@ -372,7 +374,8 @@ extension FancyVrtlEpubBuilder {
             }
         case .two:
             return book.sections.map { section in
-                let thisSectionName = "p-\(String(format: "%03d", counter + 1)).xhtml"
+                counter += 1
+                let thisSectionName = "p-\(String(format: "%03d", counter)).xhtml"
                 let subsectionNames = section.subsections.map { subsection in
                     counter += 1
                     return "p-\(String(format: "%03d", counter)).xhtml"
@@ -384,7 +387,7 @@ extension FancyVrtlEpubBuilder {
 }
 
 extension FancyVrtlEpubBuilder: EpubBuilder {
-    func contentBody(section: BookSection) -> String {
+    func contentBody(section: BookSection, tobiraText: String? = nil) -> String {
         let body = section.content.map { content in
             switch content {
             case .paragraph(let text):
@@ -393,7 +396,15 @@ extension FancyVrtlEpubBuilder: EpubBuilder {
                 return "<p><div class=\"sashie\"><img src=\"../images/\(name)\" /></div></p>"
             }
         }.joined(separator: "\n")
-        return """
+        let tobira: String
+        if let tobiraText = tobiraText {
+            tobira = """
+            <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(tobiraText)</h1></div></div>\n
+            """
+        } else {
+            tobira = ""
+        }
+        return tobira + """
             <p><br/></p>
             <div class="tobira-text" style="font-size: 1.30em">\(section.title)</div>
             <p><br/></p>
@@ -422,12 +433,23 @@ extension FancyVrtlEpubBuilder: EpubBuilder {
             }
         case .two:
             contentPages = zip(sections, contentPageNames).flatMap { (section, names) in
-                zip(sections, names.subsectionNames).map { (section, name) in
+                [
+                    ContentPage(
+                        name: names.name,
+                        language: book.language,
+                        head: .init(title: section.title, styles: ["reset.css", "bookstyle.css"]),
+                        body: """
+                        <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(section.title)</h1></div></div>
+                        """
+                    ),
+                ]
+                +
+                zip(section.subsections, names.subsectionNames).map { (subsection, name) in
                     ContentPage(
                         name: name,
                         language: book.language,
                         head: .init(title: section.title, styles: ["reset.css", "bookstyle.css"]),
-                        body: contentBody(section: section)
+                        body: contentBody(section: subsection)
                     )
                 }
             }

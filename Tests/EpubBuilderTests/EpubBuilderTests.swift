@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import EPUBKit
 
 @testable import EpubBuilder
 
@@ -146,9 +147,8 @@ func book3() throws -> Book {
         coverImageName: "cover.jpg")
 }
 
-@Test("Test depth two navigation document generation")
-func testBook3Navigation() throws {
-    let builder = FancyVrtlEpubBuilder(
+func getBook3Builder() -> FancyVrtlEpubBuilder {
+    FancyVrtlEpubBuilder(
         depth: .two,
         colophon: [
             .heading("『タイトル』"),
@@ -157,6 +157,11 @@ func testBook3Navigation() throws {
             .paragraph("EPUB by Swift package EpubBuilder"),
         ]
     )
+}
+
+@Test("Test depth two navigation document generation")
+func testBook3Navigation() throws {
+    let builder = getBook3Builder()
 
     let expectedNavigation = """
     <nav epub:type="toc">
@@ -181,15 +186,7 @@ func testBook3Navigation() throws {
 }
 
 @Test func testBook3Epub() throws {
-    let book = try book3().toEpub(builder: FancyVrtlEpubBuilder(
-        depth: .two,
-        colophon: [
-            .heading("『タイトル』"),
-            .paragraph("作者"),
-            .horizontalRule,
-            .paragraph("EPUB by Swift package EpubBuilder"),
-        ]
-    ), bookId: .zero)
+    let book = try book3().toEpub(builder: getBook3Builder(), bookId: .zero)
     let outputURL = try getOutputFolderURL().appendingPathComponent("Book3")
     try FileManager.default.ensureDirectoryExists(at: outputURL)
     try book.write(to: outputURL)
