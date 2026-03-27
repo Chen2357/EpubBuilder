@@ -44,7 +44,7 @@ var book1FileSystemContent: FileSystemNode {
 @Test("Holistic test of MinimalEpubBuilder")
 func test1() async throws {
     let book = try book1Epub()
-    let outputURL = try getOutputFolderURL().appendingPathComponent("Test1")
+    let outputURL = try getOutputFolderURL().appendingPathComponent("Book1")
     try FileManager.default.ensureDirectoryExists(at: outputURL)
 
     try book.write(to: outputURL)
@@ -53,7 +53,7 @@ func test1() async throws {
     try expected.load(at: outputURL)
 
     var actual = book1FileSystemContent
-    try actual.load(at: getTestsFolderURL().appending(path: "Test1"))
+    try actual.load(at: getTestsFolderURL().appending(path: "Book1"))
 
     #expect(expected == actual)
 }
