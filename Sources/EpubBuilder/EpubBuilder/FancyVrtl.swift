@@ -480,7 +480,7 @@ extension FancyVrtlEpubBuilder {
 }
 
 extension FancyVrtlEpubBuilder: EpubBuilder {
-    func contentBody(section: BookSection, tobiraText: String? = nil) -> String {
+    func contentBody(section: BookSection) -> String {
         let body = section.content.map { content in
             switch content {
             case .paragraph(let text):
@@ -490,17 +490,10 @@ extension FancyVrtlEpubBuilder: EpubBuilder {
                 return "<p><div class=\"sashie\"><img src=\"../images/\(name)\" /></div></p>"
             }
         }.joined(separator: "\n")
-        let tobira: String
-        if let tobiraText = tobiraText {
-            tobira = """
-            <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(tobiraText)</h1></div></div>\n
-            """
-        } else {
-            tobira = ""
-        }
-        return tobira + """
+        let sectionTitle = sectionTitleTCYOption?.apply(to: section.title) ?? section.title
+        return """
             <p><br/></p>
-            <div class="tobira-text" style="font-size: 1.30em">\(section.title)</div>
+            <div class="tobira-text" style="font-size: 1.30em">\(sectionTitle)</div>
             <p><br/></p>
             \(body)
             """
