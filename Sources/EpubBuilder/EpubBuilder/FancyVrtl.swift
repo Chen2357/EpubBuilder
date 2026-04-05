@@ -290,7 +290,64 @@ public struct FancyVrtlEpubBuilder {
 }
 
 extension FancyVrtlEpubBuilder.TCYOption {
+    func normalize(text: String) -> String {
+        let fullWidthNumberRegex = /[０-９]+/
+        let fullWidthAlphanumericRegex = /([０-９Ａ-Ｚａ-ｚ]+)/
+
+        func normalizePlainText(_ plainText: String) -> String {
+            var transformed = ""
+            var currentIndex = plainText.startIndex
+
+            for match in plainText.matches(of: fullWidthAlphanumericRegex) {
+                transformed += plainText[currentIndex..<match.range.lowerBound]
+
+                let substring = String(match.1).applyingTransform(.fullwidthToHalfwidth, reverse: false) ?? String(match.1)
+
+                if substring.wholeMatch(of: fullWidthNumberRegex) != nil {
+                    if substring.count <= maxTCYNumberLength && substring.count > 1 {
+                        transformed += "<span class=\"tcy\">\(substring)</span>"
+                    } else {
+                        transformed += substring
+                    }
+                } else {
+                    if substring.count <= maxTCYAlphanumericLength && substring.count > 1 {
+                        transformed += "<span class=\"tcy\">\(substring)</span>"
+                    } else {
+                        transformed += substring
+                    }
+                }
+
+                currentIndex = match.range.upperBound
+            }
+
+            transformed += plainText[currentIndex...]
+            return transformed
+        }
+
+        var result = ""
+        var index = text.startIndex
+
+        while index < text.endIndex {
+            if text[index] == "<" {
+                guard let closeIndex = text[index...].firstIndex(of: ">") else {
+                    result += normalizePlainText(String(text[index...]))
+                    break
+                }
+
+                result += text[index...closeIndex]
+                index = text.index(after: closeIndex)
+            } else {
+                let nextTagIndex = text[index...].firstIndex(of: "<") ?? text.endIndex
+                result += normalizePlainText(String(text[index..<nextTagIndex]))
+                index = nextTagIndex
+            }
+        }
+
+        return result
+    }
+
     func apply(to text: String) -> String {
+        let text = normalize(text: text)
         let numberRegex = /[0-9]+/
         let alphanumericRegex = /([0-9A-Za-z]+)/
         func applyToPlainText(_ plainText: String) -> String {
