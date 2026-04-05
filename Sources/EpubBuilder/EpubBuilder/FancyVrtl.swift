@@ -243,13 +243,14 @@ public struct FancyVrtlEpubBuilder {
         public var maxTCYAlphanumericLength: Int
         public var maxFullWidthAlphanumericLength: Int
 
-        public var specialTCY: [String] = ["!?", "?!", "!!", "??"]
+        public var specialTCY: [String]
 
-        public init(maxTCYNumberLength: Int, maxFullWidthNumberLength: Int, maxTCYAlphanumericLength: Int, maxFullWidthAlphanumericLength: Int) {
+        public init(maxTCYNumberLength: Int, maxFullWidthNumberLength: Int, maxTCYAlphanumericLength: Int, maxFullWidthAlphanumericLength: Int, specialTCY: [String] = ["!?", "?!", "!!", "??"]) {
             self.maxTCYNumberLength = maxTCYNumberLength
             self.maxFullWidthNumberLength = maxFullWidthNumberLength
             self.maxTCYAlphanumericLength = maxTCYAlphanumericLength
             self.maxFullWidthAlphanumericLength = maxFullWidthAlphanumericLength
+            self.specialTCY = specialTCY
         }
 
         public static var `default`: TCYOption {
