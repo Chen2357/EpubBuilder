@@ -1,6 +1,5 @@
 import Foundation
 import Testing
-import EPUBKit
 
 @testable import EpubBuilder
 
@@ -66,9 +65,9 @@ func book2() throws -> Book {
         language: "ja",
         sections: [1, 2, 3, 4, 10, 11, 12, 100].map { index in
             BookSection(
-                title: "第<span class=\"tcy\">\(index)</span>話",
+                title: "第\(index)話",
                 content: [
-                    .paragraph("第<span class=\"tcy\">\(index)</span>話の内容です。")
+                    .paragraph("第\(index)話の内容です。")
                 ])
         })
 }
@@ -81,10 +80,10 @@ func testBook2Navigation() throws {
     <nav epub:type="toc">
     <h1>Contents</h1>
     <ol>
-    <li><a href="p-001.xhtml">第<span class="tcy">1</span>話</a></li>
-    <li><a href="p-002.xhtml">第<span class="tcy">2</span>話</a></li>
-    <li><a href="p-003.xhtml">第<span class="tcy">3</span>話</a></li>
-    <li><a href="p-004.xhtml">第<span class="tcy">4</span>話</a></li>
+    <li><a href="p-001.xhtml">第１話</a></li>
+    <li><a href="p-002.xhtml">第２話</a></li>
+    <li><a href="p-003.xhtml">第３話</a></li>
+    <li><a href="p-004.xhtml">第４話</a></li>
     <li><a href="p-005.xhtml">第<span class="tcy">10</span>話</a></li>
     <li><a href="p-006.xhtml">第<span class="tcy">11</span>話</a></li>
     <li><a href="p-007.xhtml">第<span class="tcy">12</span>話</a></li>
@@ -169,13 +168,13 @@ func testBook3Navigation() throws {
     <ol>
     <li><a href="p-001.xhtml"><ruby>始<rt>はじ</rt>まり</ruby></a>
     <ol>
-    <li><a href="p-001.xhtml">第１話</a></li>
-    <li><a href="p-002.xhtml">第２話</a></li>
+    <li><a href="p-002.xhtml">第１話</a></li>
+    <li><a href="p-003.xhtml">第２話</a></li>
     </ol>
     </li>
-    <li><a href="p-003.xhtml">終わり</a>
+    <li><a href="p-004.xhtml">終わり</a>
     <ol>
-    <li><a href="p-003.xhtml">第３話</a></li>
+    <li><a href="p-005.xhtml">第３話</a></li>
     </ol>
     </li>
     </ol>

@@ -132,7 +132,7 @@ func epubBook1ContentTest() async throws {
             <item id="text.nav.xhtml" href="text/nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
             <item id="text.p-1.xhtml" href="text/p-1.xhtml" media-type="application/xhtml+xml"/>
             </manifest>
-            <spine page-progression-direction="leftToRight">
+            <spine page-progression-direction="ltr">
             <itemref idref="text.nav.xhtml"/>
             <itemref idref="text.p-1.xhtml"/>
             </spine>

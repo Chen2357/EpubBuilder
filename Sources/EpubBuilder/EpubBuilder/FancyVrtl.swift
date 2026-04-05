@@ -233,6 +233,28 @@ public struct FancyVrtlEpubBuilder {
     public var depth: Depth
     public var colophon: [ColophonElement]?
 
+    public var sectionTitleTCYOption: TCYOption?
+    public var contentTCYOption: TCYOption?
+
+    public struct TCYOption {
+        public var maxTCYNumberLength: Int
+        public var maxFullWidthNumberLength: Int
+
+        public var maxTCYAlphanumericLength: Int
+        public var maxFullWidthAlphanumericLength: Int
+
+        public init(maxTCYNumberLength: Int, maxFullWidthNumberLength: Int, maxTCYAlphanumericLength: Int, maxFullWidthAlphanumericLength: Int) {
+            self.maxTCYNumberLength = maxTCYNumberLength
+            self.maxFullWidthNumberLength = maxFullWidthNumberLength
+            self.maxTCYAlphanumericLength = maxTCYAlphanumericLength
+            self.maxFullWidthAlphanumericLength = maxFullWidthAlphanumericLength
+        }
+
+        public static var `default`: TCYOption {
+            TCYOption(maxTCYNumberLength: 3, maxFullWidthNumberLength: 4, maxTCYAlphanumericLength: 3, maxFullWidthAlphanumericLength: 4)
+        }
+    }
+
     public var navigationFileName: String? { "nav.xhtml" }
 
     public enum Depth: Int {
@@ -253,10 +275,77 @@ public struct FancyVrtlEpubBuilder {
 
     public init(
         depth: Depth,
-        colophon: [ColophonElement]? = nil
+        colophon: [ColophonElement]? = nil,
+        sectionTitleTCYOption: TCYOption? = .default,
+        contentTCYOption: TCYOption? = .default
     ) {
         self.depth = depth
         self.colophon = colophon
+        self.sectionTitleTCYOption = sectionTitleTCYOption
+        self.contentTCYOption = contentTCYOption
+    }
+}
+
+extension FancyVrtlEpubBuilder.TCYOption {
+    func apply(to text: String) -> String {
+        let numberRegex = /[0-9]+/
+        let alphanumericRegex = /([0-9A-Za-z]+)/
+        func applyToPlainText(_ plainText: String) -> String {
+            var transformed = ""
+            var currentIndex = plainText.startIndex
+
+            for match in plainText.matches(of: alphanumericRegex) {
+                transformed += plainText[currentIndex..<match.range.lowerBound]
+
+                let substring = String(match.1)
+
+                if substring.count == 1 {
+                    transformed += substring.applyingTransform(.fullwidthToHalfwidth, reverse: true) ?? substring
+                } else if substring.wholeMatch(of: numberRegex) != nil {
+                    if substring.count <= maxTCYNumberLength {
+                        transformed += "<span class=\"tcy\">\(substring)</span>"
+                    } else if substring.count <= maxFullWidthNumberLength {
+                        transformed += substring.applyingTransform(.fullwidthToHalfwidth, reverse: true) ?? substring
+                    } else {
+                        transformed += substring
+                    }
+                } else {
+                    if substring.count <= maxTCYAlphanumericLength {
+                        transformed += "<span class=\"tcy\">\(substring)</span>"
+                    } else if substring.count <= maxFullWidthAlphanumericLength {
+                        transformed += substring.applyingTransform(.fullwidthToHalfwidth, reverse: true) ?? substring
+                    } else {
+                        transformed += substring
+                    }
+                }
+
+                currentIndex = match.range.upperBound
+            }
+
+            transformed += plainText[currentIndex...]
+            return transformed
+        }
+
+        var result = ""
+        var index = text.startIndex
+
+        while index < text.endIndex {
+            if text[index] == "<" {
+                guard let closeIndex = text[index...].firstIndex(of: ">") else {
+                    result += applyToPlainText(String(text[index...]))
+                    break
+                }
+
+                result += text[index...closeIndex]
+                index = text.index(after: closeIndex)
+            } else {
+                let nextTagIndex = text[index...].firstIndex(of: "<") ?? text.endIndex
+                result += applyToPlainText(String(text[index..<nextTagIndex]))
+                index = nextTagIndex
+            }
+        }
+
+        return result
     }
 }
 
@@ -276,12 +365,13 @@ extension FancyVrtlEpubBuilder {
     }
 
     func buildTitlePage(book: Book) -> ContentPage {
-        ContentPage(
+        let displayedTitle = sectionTitleTCYOption?.apply(to: book.title) ?? book.title
+        return ContentPage(
             name: "title.xhtml",
             language: book.language,
             head: .init(title: book.title, styles: ["reset.css", "bookstyle.css"]),
             body: """
-                <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(book.title)</h1></div></div>
+                <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(displayedTitle)</h1></div></div>
                 """
         )
     }
@@ -317,7 +407,8 @@ extension FancyVrtlEpubBuilder {
         switch depth {
         case .one:
             let items = book.sections.enumerated().map { (index, section) in
-                return "<li><a href=\"p-\(String(format: "%03d", index + 1)).xhtml\">\(section.title)</a></li>"
+                let displayedTitle = sectionTitleTCYOption?.apply(to: section.title) ?? section.title
+                return "<li><a href=\"p-\(String(format: "%03d", index + 1)).xhtml\">\(displayedTitle)</a></li>"
             }.joined(separator: "\n")
             return """
                 <nav epub:type="toc">
@@ -332,12 +423,14 @@ extension FancyVrtlEpubBuilder {
             var items: [String] = []
             for section in book.sections {
                 pageCounter += 1
-                items.append("<li><a href=\"p-\(String(format: "%03d", pageCounter)).xhtml\">\(section.title)</a>")
+                let displayedTitle = sectionTitleTCYOption?.apply(to: section.title) ?? section.title
+                items.append("<li><a href=\"p-\(String(format: "%03d", pageCounter)).xhtml\">\(displayedTitle)</a>")
                 if !section.subsections.isEmpty {
                     items.append("<ol>")
                     for subsection in section.subsections {
                         pageCounter += 1
-                        items.append("<li><a href=\"p-\(String(format: "%03d", pageCounter)).xhtml\">\(subsection.title)</a></li>")
+                        let displayedSubsectionTitle = sectionTitleTCYOption?.apply(to: subsection.title) ?? subsection.title
+                        items.append("<li><a href=\"p-\(String(format: "%03d", pageCounter)).xhtml\">\(displayedSubsectionTitle)</a></li>")
                     }
                     items.append("</ol>")
                 }
@@ -391,7 +484,8 @@ extension FancyVrtlEpubBuilder: EpubBuilder {
         let body = section.content.map { content in
             switch content {
             case .paragraph(let text):
-                return "<p>\(text)</p>"
+                let processedText = contentTCYOption?.apply(to: text) ?? text
+                return "<p>\(processedText)</p>"
             case .image(let name):
                 return "<p><div class=\"sashie\"><img src=\"../images/\(name)\" /></div></p>"
             }
@@ -439,7 +533,7 @@ extension FancyVrtlEpubBuilder: EpubBuilder {
                         language: book.language,
                         head: .init(title: section.title, styles: ["reset.css", "bookstyle.css"]),
                         body: """
-                        <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(section.title)</h1></div></div>
+                        <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(sectionTitleTCYOption?.apply(to: section.title) ?? section.title)</h1></div></div>
                         """
                     ),
                 ]
