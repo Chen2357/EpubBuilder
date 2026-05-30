@@ -245,7 +245,10 @@ public struct FancyVrtlEpubBuilder {
 
         public var specialTCY: [String]
 
-        public init(maxTCYNumberLength: Int, maxFullWidthNumberLength: Int, maxTCYAlphanumericLength: Int, maxFullWidthAlphanumericLength: Int, specialTCY: [String] = ["!?", "?!", "!!", "??"]) {
+        public init(
+            maxTCYNumberLength: Int, maxFullWidthNumberLength: Int, maxTCYAlphanumericLength: Int,
+            maxFullWidthAlphanumericLength: Int, specialTCY: [String] = ["!?", "?!", "!!", "??"]
+        ) {
             self.maxTCYNumberLength = maxTCYNumberLength
             self.maxFullWidthNumberLength = maxFullWidthNumberLength
             self.maxTCYAlphanumericLength = maxTCYAlphanumericLength
@@ -254,7 +257,9 @@ public struct FancyVrtlEpubBuilder {
         }
 
         public static var `default`: TCYOption {
-            TCYOption(maxTCYNumberLength: 3, maxFullWidthNumberLength: 4, maxTCYAlphanumericLength: 3, maxFullWidthAlphanumericLength: 4)
+            TCYOption(
+                maxTCYNumberLength: 3, maxFullWidthNumberLength: 4, maxTCYAlphanumericLength: 3,
+                maxFullWidthAlphanumericLength: 4)
         }
     }
 
@@ -301,7 +306,9 @@ extension FancyVrtlEpubBuilder.TCYOption {
             for match in plainText.matches(of: fullWidthAlphanumericRegex) {
                 transformed += plainText[currentIndex..<match.range.lowerBound]
 
-                let substring = String(match.1).applyingTransform(.fullwidthToHalfwidth, reverse: false) ?? String(match.1)
+                let substring =
+                    String(match.1).applyingTransform(.fullwidthToHalfwidth, reverse: false)
+                    ?? String(match.1)
 
                 if substring.wholeMatch(of: fullWidthNumberRegex) != nil {
                     if substring.count <= maxTCYNumberLength && substring.count > 1 {
@@ -360,12 +367,16 @@ extension FancyVrtlEpubBuilder.TCYOption {
                 let substring = String(match.1)
 
                 if substring.count == 1 {
-                    transformed += substring.applyingTransform(.fullwidthToHalfwidth, reverse: true) ?? substring
+                    transformed +=
+                        substring.applyingTransform(.fullwidthToHalfwidth, reverse: true)
+                        ?? substring
                 } else if substring.wholeMatch(of: numberRegex) != nil {
                     if substring.count <= maxTCYNumberLength {
                         transformed += "<span class=\"tcy\">\(substring)</span>"
                     } else if substring.count <= maxFullWidthNumberLength {
-                        transformed += substring.applyingTransform(.fullwidthToHalfwidth, reverse: true) ?? substring
+                        transformed +=
+                            substring.applyingTransform(.fullwidthToHalfwidth, reverse: true)
+                            ?? substring
                     } else {
                         transformed += substring
                     }
@@ -373,7 +384,9 @@ extension FancyVrtlEpubBuilder.TCYOption {
                     if substring.count <= maxTCYAlphanumericLength {
                         transformed += "<span class=\"tcy\">\(substring)</span>"
                     } else if substring.count <= maxFullWidthAlphanumericLength {
-                        transformed += substring.applyingTransform(.fullwidthToHalfwidth, reverse: true) ?? substring
+                        transformed +=
+                            substring.applyingTransform(.fullwidthToHalfwidth, reverse: true)
+                            ?? substring
                     } else {
                         transformed += substring
                     }
@@ -406,7 +419,8 @@ extension FancyVrtlEpubBuilder.TCYOption {
         }
 
         return specialTCY.reduce(result) { partialResult, special in
-            partialResult.replacingOccurrences(of: special, with: "<span class=\"tcy\">\(special)</span>")
+            partialResult.replacingOccurrences(
+                of: special, with: "<span class=\"tcy\">\(special)</span>")
         }
     }
 }
@@ -468,9 +482,11 @@ extension FancyVrtlEpubBuilder {
     func buildNavigationBody(book: Book) -> String {
         switch depth {
         case .one:
-            let items = book.sections.enumerated().map { (index, section) in
-                let displayedTitle = sectionTitleTCYOption?.apply(to: section.title) ?? section.title
-                return "<li><a href=\"p-\(String(format: "%03d", index + 1)).xhtml\">\(displayedTitle)</a></li>"
+            let items = book.sections.enumerated().compactMap { (index, section) in
+                guard let sectionTitle = section.title else { return nil }
+                let displayedTitle = sectionTitleTCYOption?.apply(to: sectionTitle) ?? sectionTitle
+                return
+                    "<li><a href=\"p-\(String(format: "%03d", index + 1)).xhtml\">\(displayedTitle)</a></li>"
             }.joined(separator: "\n")
             return """
                 <nav epub:type="toc">
@@ -485,14 +501,21 @@ extension FancyVrtlEpubBuilder {
             var items: [String] = []
             for section in book.sections {
                 pageCounter += 1
-                let displayedTitle = sectionTitleTCYOption?.apply(to: section.title) ?? section.title
-                items.append("<li><a href=\"p-\(String(format: "%03d", pageCounter)).xhtml\">\(displayedTitle)</a>")
+                let sectionTitle = section.title ?? "Section \(pageCounter)"
+                let displayedTitle = sectionTitleTCYOption?.apply(to: sectionTitle) ?? sectionTitle
+                items.append(
+                    "<li><a href=\"p-\(String(format: "%03d", pageCounter)).xhtml\">\(displayedTitle)</a>"
+                )
                 if !section.subsections.isEmpty {
                     items.append("<ol>")
                     for subsection in section.subsections {
                         pageCounter += 1
-                        let displayedSubsectionTitle = sectionTitleTCYOption?.apply(to: subsection.title) ?? subsection.title
-                        items.append("<li><a href=\"p-\(String(format: "%03d", pageCounter)).xhtml\">\(displayedSubsectionTitle)</a></li>")
+                        let subsectionTitle = subsection.title ?? "Subsection \(pageCounter)"
+                        let displayedSubsectionTitle =
+                            sectionTitleTCYOption?.apply(to: subsectionTitle) ?? subsectionTitle
+                        items.append(
+                            "<li><a href=\"p-\(String(format: "%03d", pageCounter)).xhtml\">\(displayedSubsectionTitle)</a></li>"
+                        )
                     }
                     items.append("</ol>")
                 }
@@ -552,10 +575,13 @@ extension FancyVrtlEpubBuilder: EpubBuilder {
                 return "<p><div class=\"sashie\"><img src=\"../images/\(name)\" /></div></p>"
             }
         }.joined(separator: "\n")
-        let sectionTitle = sectionTitleTCYOption?.apply(to: section.title) ?? section.title
+        guard let sectionTitle = section.title else {
+            fatalError("Section title is required for content pages in FancyVrtlEpubBuilder.")
+        }
+        let displayedSectionTitle = sectionTitleTCYOption?.apply(to: sectionTitle) ?? sectionTitle
         return """
             <p><br/></p>
-            <div class="tobira-text" style="font-size: 1.30em">\(sectionTitle)</div>
+            <div class="tobira-text" style="font-size: 1.30em">\(displayedSectionTitle)</div>
             <p><br/></p>
             \(body)
             """
@@ -576,39 +602,50 @@ extension FancyVrtlEpubBuilder: EpubBuilder {
                 ContentPage(
                     name: name.name,
                     language: book.language,
-                    head: .init(title: section.title, styles: ["reset.css", "bookstyle.css"]),
+                    head: .init(
+                        title: section.title ?? book.title, styles: ["reset.css", "bookstyle.css"]),
                     body: contentBody(section: section)
                 )
             }
         case .two:
             contentPages = zip(sections, contentPageNames).flatMap { (section, names) in
-                [
-                    ContentPage(
-                        name: names.name,
-                        language: book.language,
-                        head: .init(title: section.title, styles: ["reset.css", "bookstyle.css"]),
-                        body: """
-                        <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(sectionTitleTCYOption?.apply(to: section.title) ?? section.title)</h1></div></div>
-                        """
-                    ),
-                ]
-                +
-                zip(section.subsections, names.subsectionNames).map { (subsection, name) in
-                    ContentPage(
-                        name: name,
-                        language: book.language,
-                        head: .init(title: section.title, styles: ["reset.css", "bookstyle.css"]),
-                        body: contentBody(section: subsection)
-                    )
-                }
+                let header: [ContentPage] =
+                    if let sectionTitle = section.title {
+                        [
+                            ContentPage(
+                                name: names.name,
+                                language: book.language,
+                                head: .init(
+                                    title: sectionTitle, styles: ["reset.css", "bookstyle.css"]),
+                                body: """
+                                    <div class="horizontal tobira-page"><div class="tobira-text"><h1>\(sectionTitleTCYOption?.apply(to: sectionTitle) ?? sectionTitle)</h1></div></div>
+                                    """
+                            )
+                        ]
+                    } else { [] }
+                return header
+                    + zip(section.subsections, names.subsectionNames).map { (subsection, name) in
+                        ContentPage(
+                            name: name,
+                            language: book.language,
+                            head: .init(
+                                title: section.title ?? book.title,
+                                styles: ["reset.css", "bookstyle.css"]),
+                            body: contentBody(section: subsection)
+                        )
+                    }
             }
         }
 
         guard contentPages.count <= 999 else {
-            fatalError("Too many content pages. The current implementation supports up to 999 pages.")
+            fatalError(
+                "Too many content pages. The current implementation supports up to 999 pages.")
         }
 
-        return [buildCoverPage(book: book), buildTitlePage(book: book), buildVerticalNavigationPage(book: book)].compactMap { $0 }
+        return [
+            buildCoverPage(book: book), buildTitlePage(book: book),
+            buildVerticalNavigationPage(book: book),
+        ].compactMap { $0 }
             + contentPages + [buildColophonPage(book: book)].compactMap { $0 }
     }
 }

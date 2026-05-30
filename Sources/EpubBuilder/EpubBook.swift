@@ -15,6 +15,8 @@ public struct EpubBook {
     public var coverImageName: String?
     public var navigationFileName: String?
 
+    public var renditionLayout: RenditionLayout?
+
     public init(
         title: String,
         creators: [Creator],
@@ -25,7 +27,8 @@ public struct EpubBook {
         styles: [StyleSheet],
         contents: [ContentPage],
         coverImageName: String? = nil,
-        navigationFileName: String? = nil
+        navigationFileName: String? = nil,
+        renditionLayout: RenditionLayout? = nil
     ) {
         self.title = title
         self.creators = creators
@@ -39,6 +42,8 @@ public struct EpubBook {
 
         self.coverImageName = coverImageName
         self.navigationFileName = navigationFileName
+
+        self.renditionLayout = renditionLayout
     }
 }
 
@@ -81,6 +86,11 @@ public extension EpubBook {
     enum PageProgressionDirection: String {
         case leftToRight = "ltr"
         case rightToLeft = "rtl"
+    }
+
+    enum RenditionLayout: String {
+        case reflowable = "reflowable"
+        case prepaginated = "pre-paginated"
     }
 }
 
@@ -131,8 +141,9 @@ extension EpubBook {
 
     var contentItems: String {
         contents.map { content in
-            """
-            <item id="text.\(content.name)" href="text/\(content.name)" media-type="application/xhtml+xml"\(content.name == navigationFileName ? " properties=\"nav\"" : "")/>
+            let properties = [content.svg ? "svg" : nil, content.name == navigationFileName ? "nav" : nil].compactMap { $0 }.joined(separator: " ")
+            return """
+            <item id="text.\(content.name)" href="text/\(content.name)" media-type="application/xhtml+xml"\(properties.isEmpty ? "" : " properties=\"\(properties)\"")/>
             """
         }.joined(separator: "\n")
     }
@@ -140,7 +151,7 @@ extension EpubBook {
     var spine: String {
         contents.filter(\.isInSpine).map { content in
             """
-            <itemref idref="text.\(content.name)"\(content.linear == false ? " linear=\"no\"" : "")\(content.pageSpread.map { " properties=\"page-spread-\($0)\"" } ?? "")/>
+            <itemref idref="text.\(content.name)"\(content.linear == false ? " linear=\"no\"" : "")\(content.pageSpread.map { " properties=\"\($0)\"" } ?? "")/>
             """
         }.joined(separator: "\n")
     }
@@ -155,8 +166,11 @@ extension EpubBook {
         <dc:identifier id="BookID">uuid:\(bookId.uuidString)</dc:identifier>
         <dc:language>\(language)</dc:language>
         \(coverImageName.map { """
-        <meta name="cover" content="images.\($0)"/>
-        """} ?? "")
+        <meta name="cover" content="images.\($0)"/>\n
+        """} ?? "")\
+        \(renditionLayout.map { """
+        <meta property="rendition:layout">\($0.rawValue)</meta>\n
+        """} ?? "")\
         </metadata>
         <manifest>
         \(stylesheetItems)

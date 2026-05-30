@@ -4,6 +4,7 @@ public protocol EpubBuilder {
     var pageProgressionDirection: EpubBook.PageProgressionDirection { get }
     var styles: [StyleSheet] { get }
     var navigationFileName: String? { get }
+    var renditionLayout: EpubBook.RenditionLayout? { get }
 
     func buildContentPages(book: Book) -> [ContentPage]
 }
@@ -20,7 +21,12 @@ public extension Book {
             styles: builder.styles,
             contents: builder.buildContentPages(book: self),
             coverImageName: coverImageName,
-            navigationFileName: builder.navigationFileName
+            navigationFileName: builder.navigationFileName,
+            renditionLayout: builder.renditionLayout
         )
     }
+}
+
+public extension EpubBuilder {
+    var renditionLayout: EpubBook.RenditionLayout? { nil }
 }

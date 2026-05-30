@@ -21,11 +21,11 @@ public struct Book {
 }
 
 public struct BookSection {
-    public var title: String
+    public var title: String?
     public var content: [ContentBlock]
     public var subsections: [BookSection] = []
 
-    public init(title: String, content: [ContentBlock], subsections: [BookSection] = []) {
+    public init(title: String?, content: [ContentBlock], subsections: [BookSection] = []) {
         self.title = title
         self.content = content
         self.subsections = subsections

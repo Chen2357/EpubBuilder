@@ -24,7 +24,7 @@ public struct MinimalEpubBuilder: EpubBuilder {
         book.sections.enumerated().map { (index, section) in
             ContentPage(
                 name: "p-\(String(format: "%04d", index + 1)).xhtml", language: book.language,
-                head: .init(title: section.title, styles: []),
+                head: .init(title: section.title ?? book.title, styles: []),
                 body: contentBody(section: section))
         }
     }

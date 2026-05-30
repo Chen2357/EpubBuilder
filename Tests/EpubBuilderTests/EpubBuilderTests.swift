@@ -34,7 +34,7 @@ var book1FileSystemContent: FileSystemNode {
         Folder("images") {
             File("cover.jpg")
         }
-        Folder("style") { }
+        Folder("style") {}
         Folder("text") {
             File("p-001.xhtml")
         }
@@ -77,20 +77,20 @@ func testBook2Navigation() throws {
     let builder = FancyVrtlEpubBuilder(depth: .one)
 
     let expectedNavigation = """
-    <nav epub:type="toc">
-    <h1>Contents</h1>
-    <ol>
-    <li><a href="p-001.xhtml">第１話</a></li>
-    <li><a href="p-002.xhtml">第２話</a></li>
-    <li><a href="p-003.xhtml">第３話</a></li>
-    <li><a href="p-004.xhtml">第４話</a></li>
-    <li><a href="p-005.xhtml">第<span class="tcy">10</span>話</a></li>
-    <li><a href="p-006.xhtml">第<span class="tcy">11</span>話</a></li>
-    <li><a href="p-007.xhtml">第<span class="tcy">12</span>話</a></li>
-    <li><a href="p-008.xhtml">第<span class="tcy">100</span>話</a></li>
-    </ol>
-    </nav>
-    """
+        <nav epub:type="toc">
+        <h1>Contents</h1>
+        <ol>
+        <li><a href="p-001.xhtml">第１話</a></li>
+        <li><a href="p-002.xhtml">第２話</a></li>
+        <li><a href="p-003.xhtml">第３話</a></li>
+        <li><a href="p-004.xhtml">第４話</a></li>
+        <li><a href="p-005.xhtml">第<span class="tcy">10</span>話</a></li>
+        <li><a href="p-006.xhtml">第<span class="tcy">11</span>話</a></li>
+        <li><a href="p-007.xhtml">第<span class="tcy">12</span>話</a></li>
+        <li><a href="p-008.xhtml">第<span class="tcy">100</span>話</a></li>
+        </ol>
+        </nav>
+        """
     let actualNavigation = try builder.buildNavigationBody(book: book2())
     #expect(expectedNavigation == actualNavigation)
 }
@@ -129,7 +129,7 @@ func book3() throws -> Book {
                         title: "第２話",
                         content: [
                             .paragraph("第２話の内容です。")
-                        ])
+                        ]),
                 ]),
             BookSection(
                 title: "終わり",
@@ -140,7 +140,7 @@ func book3() throws -> Book {
                         content: [
                             .paragraph("第３話の内容です。")
                         ])
-                ])
+                ]),
         ],
         images: [.init(name: "cover.jpg", data: try getCoverImageData(), mediaType: .jpeg)],
         coverImageName: "cover.jpg")
@@ -163,23 +163,23 @@ func testBook3Navigation() throws {
     let builder = getBook3Builder()
 
     let expectedNavigation = """
-    <nav epub:type="toc">
-    <h1>Contents</h1>
-    <ol>
-    <li><a href="p-001.xhtml"><ruby>始<rt>はじ</rt>まり</ruby></a>
-    <ol>
-    <li><a href="p-002.xhtml">第１話</a></li>
-    <li><a href="p-003.xhtml">第２話</a></li>
-    </ol>
-    </li>
-    <li><a href="p-004.xhtml">終わり</a>
-    <ol>
-    <li><a href="p-005.xhtml">第３話</a></li>
-    </ol>
-    </li>
-    </ol>
-    </nav>
-    """
+        <nav epub:type="toc">
+        <h1>Contents</h1>
+        <ol>
+        <li><a href="p-001.xhtml"><ruby>始<rt>はじ</rt>まり</ruby></a>
+        <ol>
+        <li><a href="p-002.xhtml">第１話</a></li>
+        <li><a href="p-003.xhtml">第２話</a></li>
+        </ol>
+        </li>
+        <li><a href="p-004.xhtml">終わり</a>
+        <ol>
+        <li><a href="p-005.xhtml">第３話</a></li>
+        </ol>
+        </li>
+        </ol>
+        </nav>
+        """
     let actualNavigation = try builder.buildNavigationBody(book: book3())
     #expect(expectedNavigation == actualNavigation)
 }
@@ -191,3 +191,45 @@ func testBook3Navigation() throws {
     try book.write(to: outputURL)
     try book.writeEpub(to: outputURL.appending(component: "Book3.epub"))
 }
+
+func manga() -> Book {
+    Book(
+        title: "タイトル",
+        creators: [.init(name: "作者", role: .author)],
+        language: "ja",
+        sections: [
+            BookSection(
+                title: nil,
+                content: [
+                    .image("i_0000.jpg")
+                ]
+            ),
+            BookSection(
+                title: "第１話",
+                content: [
+                    .image("i_0001.jpg"),
+                    .image("i_0002.jpg")
+                ]
+            ),
+            BookSection(
+                title: "第２話",
+                content: [
+                    .image("i_0003.jpg")
+                ]
+            )
+        ],
+        images: (0...3).map { index in
+            ImageFile(name: "i_\(String(format: "%04d", index)).jpg", data: try! getCoverImageData(), mediaType: .jpeg)
+        } + [ImageFile(name: "cover.jpg", data: try! getCoverImageData(), mediaType: .jpeg)],
+        coverImageName: "cover.jpg"
+    )
+}
+
+@Test func outputMinimalManga() throws {
+    let book = manga().toEpub(builder: MinimalMangaEpubBuilder(width: 1792, height: 2380, coverPageTitle: "表紙"), bookId: .zero)
+    let outputURL = try getOutputFolderURL().appendingPathComponent("Manga")
+    try FileManager.default.ensureDirectoryExists(at: outputURL)
+    try book.write(to: outputURL)
+    try book.writeEpub(to: outputURL.appending(component: "Manga.epub"))
+}
+

@@ -63,13 +63,16 @@ public struct ContentPage {
     public var linear: Bool
     public var pageSpread: PageSpread?
 
+    public var svg: Bool
+
     public enum PageSpread: String {
-        case left = "left"
-        case right = "right"
+        case left = "page-spread-left"
+        case right = "page-spread-right"
+        case center = "rendition:page-spread-center"
     }
 
     public init(
-        name: String, language: String, head: Head, body: String, `class`: String? = nil, isInSpine: Bool = true, linear: Bool = true, pageSpread: PageSpread? = nil
+        name: String, language: String, head: Head, body: String, `class`: String? = nil, isInSpine: Bool = true, linear: Bool = true, pageSpread: PageSpread? = nil, svg: Bool = false
     ) {
         self.name = name
         self.language = language
@@ -79,6 +82,7 @@ public struct ContentPage {
         self.linear = linear
         self.pageSpread = pageSpread
         self.isInSpine = isInSpine
+        self.svg = svg
     }
 
     var html: String { """
