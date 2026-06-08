@@ -13,6 +13,27 @@ public struct ImageFile {
         case webp = "webp"
     }
 
+    public init?(name: String, data: Data) {
+        self.name = name
+        self.data = data
+
+        let ext = URL(fileURLWithPath: name).pathExtension.lowercased()
+        switch ext {
+        case "jpeg", "jpg":
+            self.mediaType = .jpeg
+        case "png":
+            self.mediaType = .png
+        case "gif":
+            self.mediaType = .gif
+        case "svg":
+            self.mediaType = .svg
+        case "webp":
+            self.mediaType = .webp
+        default:
+            return nil
+        }
+    }
+
     public init(name: String, data: Data, mediaType: MediaType) {
         self.name = name
         self.data = data
