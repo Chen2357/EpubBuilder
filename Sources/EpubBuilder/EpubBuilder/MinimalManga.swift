@@ -6,12 +6,10 @@ public struct MinimalMangaEpubBuilder: EpubBuilder {
 
     public var width: Int
     public var height: Int
-    public var coverPageTitle: String
 
     public init(width: Int, height: Int, coverPageTitle: String) {
         self.width = width
         self.height = height
-        self.coverPageTitle = coverPageTitle
     }
 
     public var styles: [StyleSheet] {
@@ -55,20 +53,6 @@ public struct MinimalMangaEpubBuilder: EpubBuilder {
             title: title, styles: ["fixed-layout-jp.css"], viewport: (width: width, height: height))
     }
 
-    func buildCoverPage(book: Book) -> ContentPage {
-        guard let coverImageName = book.coverImageName else {
-            fatalError("MinimalMangaEpubBuilder requires a cover image.")
-        }
-        return ContentPage(
-            name: "p_cover.xhtml",
-            language: book.language,
-            head: contentHead(title: book.title),
-            body: contentBody(imageName: coverImageName),
-            pageSpread: .center,
-            svg: true
-        )
-    }
-
     func buildNavigationPage(book: Book) -> ContentPage {
         var items: [String] = []
         var pageIndex = 0
@@ -90,7 +74,6 @@ public struct MinimalMangaEpubBuilder: EpubBuilder {
                 <nav epub:type="toc" id="toc">
                 <h1>Navigation</h1>
                 <ol>
-                <li><a href="p_cover.xhtml">\(coverPageTitle)</a></li>
                 \(items.joined(separator: "\n"))\
                 </ol>
                 </nav>
@@ -100,7 +83,7 @@ public struct MinimalMangaEpubBuilder: EpubBuilder {
     }
 
     public func buildContentPages(book: Book) -> [ContentPage] {
-        var contentPages: [ContentPage] = [buildCoverPage(book: book), buildNavigationPage(book: book)]
+        var contentPages: [ContentPage] = [buildNavigationPage(book: book)]
         var pageIndex = 0
         for section in book.sections {
             for block in section.content {
