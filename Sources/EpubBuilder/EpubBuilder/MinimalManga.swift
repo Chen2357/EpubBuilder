@@ -7,7 +7,7 @@ public struct MinimalMangaEpubBuilder: EpubBuilder {
     public var width: Int
     public var height: Int
 
-    public init(width: Int, height: Int, coverPageTitle: String) {
+    public init(width: Int, height: Int) {
         self.width = width
         self.height = height
     }
@@ -95,7 +95,7 @@ public struct MinimalMangaEpubBuilder: EpubBuilder {
                     language: book.language,
                     head: contentHead(title: book.title),
                     body: contentBody(imageName: imageName),
-                    pageSpread: pageIndex % 2 == 0 ? .right : .left,
+                    pageSpread: pageIndex == 0 ? .center : pageIndex % 2 == 1 ? .right : .left,
                     svg: true
                 )
                 contentPages.append(contentPage)
