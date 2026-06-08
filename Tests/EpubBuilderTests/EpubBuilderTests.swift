@@ -199,7 +199,7 @@ func manga() -> Book {
         language: "ja",
         sections: [
             BookSection(
-                title: nil,
+                title: "表紙",
                 content: [
                     .image("i_0000.jpg")
                 ]
@@ -220,13 +220,13 @@ func manga() -> Book {
         ],
         images: (0...3).map { index in
             ImageFile(name: "i_\(String(format: "%04d", index)).jpg", data: try! getCoverImageData(), mediaType: .jpeg)
-        } + [ImageFile(name: "cover.jpg", data: try! getCoverImageData(), mediaType: .jpeg)],
-        coverImageName: "cover.jpg"
+        },
+        coverImageName: "i_0000.jpg"
     )
 }
 
 @Test func outputMinimalManga() throws {
-    let book = manga().toEpub(builder: MinimalMangaEpubBuilder(width: 1792, height: 2380, coverPageTitle: "表紙"), bookId: .zero)
+    let book = manga().toEpub(builder: MinimalMangaEpubBuilder(width: 1792, height: 2380), bookId: .zero)
     let outputURL = try getOutputFolderURL().appendingPathComponent("Manga")
     try FileManager.default.ensureDirectoryExists(at: outputURL)
     try book.write(to: outputURL)
