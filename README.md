@@ -10,8 +10,8 @@ EpubBuilder is a Swift package that provides abstractions for building EPUB file
 - The protocol `EpubBuilder` defines the methods required to build an `EpubBook` from a `Book`.
   An `EpubBuilder` implementation is responsible for styling, navigation, and HTML generation of the contents.
   - The struct `MinimalEpubBuilder` is a simple implementation of the `EpubBuilder` protocol that provides basic styling and navigation for the generated EPUB book.
-  - The struct `FancyVrtlEpubBuilder` is used for styling EPUB books with a vertical layout.
-    It is the backbone for the [KakuyomuDL](https://github.com/Chen2357/KakuyomuDL) project.
+  - The struct `FancyVrtlEpubBuilder` is used for styling EPUB books with a vertical right-to-left layout.
+  - The struct `MinimalMangaEpubBuilder` is used for manga with a prepaginated right-to-left layout.
 
 ## Usage
 
