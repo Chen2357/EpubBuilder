@@ -237,29 +237,18 @@ public struct FancyVrtlEpubBuilder {
     public var contentTCYOption: TCYOption?
 
     public struct TCYOption {
-        public var maxTCYNumberLength: Int
-        public var maxFullWidthNumberLength: Int
-
-        public var maxTCYAlphanumericLength: Int
-        public var maxFullWidthAlphanumericLength: Int
-
-        public var specialTCY: [String]
+        public var tcyMaxLength: Int
+        public var fullWidthMaxLength: Int
 
         public init(
-            maxTCYNumberLength: Int, maxFullWidthNumberLength: Int, maxTCYAlphanumericLength: Int,
-            maxFullWidthAlphanumericLength: Int, specialTCY: [String] = ["!?", "?!", "!!", "??"]
+            tcyMaxLength: Int = 3, fullWidthMaxLength: Int = 4
         ) {
-            self.maxTCYNumberLength = maxTCYNumberLength
-            self.maxFullWidthNumberLength = maxFullWidthNumberLength
-            self.maxTCYAlphanumericLength = maxTCYAlphanumericLength
-            self.maxFullWidthAlphanumericLength = maxFullWidthAlphanumericLength
-            self.specialTCY = specialTCY
+            self.tcyMaxLength = tcyMaxLength
+            self.fullWidthMaxLength = fullWidthMaxLength
         }
 
         public static var `default`: TCYOption {
-            TCYOption(
-                maxTCYNumberLength: 3, maxFullWidthNumberLength: 4, maxTCYAlphanumericLength: 3,
-                maxFullWidthAlphanumericLength: 4)
+            TCYOption(tcyMaxLength: 3, fullWidthMaxLength: 4)
         }
     }
 
@@ -295,101 +284,27 @@ public struct FancyVrtlEpubBuilder {
 }
 
 extension FancyVrtlEpubBuilder.TCYOption {
-    func normalize(text: String) -> String {
-        let fullWidthNumberRegex = /[０-９]+/
-        let fullWidthAlphanumericRegex = /([０-９Ａ-Ｚａ-ｚ]+)/
-
-        func normalizePlainText(_ plainText: String) -> String {
-            var transformed = ""
-            var currentIndex = plainText.startIndex
-
-            for match in plainText.matches(of: fullWidthAlphanumericRegex) {
-                transformed += plainText[currentIndex..<match.range.lowerBound]
-
-                let substring =
-                    String(match.1).applyingTransform(.fullwidthToHalfwidth, reverse: false)
-                    ?? String(match.1)
-
-                if substring.wholeMatch(of: fullWidthNumberRegex) != nil {
-                    if substring.count <= maxTCYNumberLength && substring.count > 1 {
-                        transformed += "<span class=\"tcy\">\(substring)</span>"
-                    } else {
-                        transformed += substring
-                    }
-                } else {
-                    if substring.count <= maxTCYAlphanumericLength && substring.count > 1 {
-                        transformed += "<span class=\"tcy\">\(substring)</span>"
-                    } else {
-                        transformed += substring
-                    }
-                }
-
-                currentIndex = match.range.upperBound
-            }
-
-            transformed += plainText[currentIndex...]
-            return transformed
-        }
-
-        var result = ""
-        var index = text.startIndex
-
-        while index < text.endIndex {
-            if text[index] == "<" {
-                guard let closeIndex = text[index...].firstIndex(of: ">") else {
-                    result += normalizePlainText(String(text[index...]))
-                    break
-                }
-
-                result += text[index...closeIndex]
-                index = text.index(after: closeIndex)
-            } else {
-                let nextTagIndex = text[index...].firstIndex(of: "<") ?? text.endIndex
-                result += normalizePlainText(String(text[index..<nextTagIndex]))
-                index = nextTagIndex
-            }
-        }
-
-        return result
-    }
-
     func apply(to text: String) -> String {
-        let text = normalize(text: text)
-        let numberRegex = /[0-9]+/
-        let alphanumericRegex = /([0-9A-Za-z]+)/
+        let regex = try! Regex("[!-~！-～]+(?:[ 　]+[!-~！-～]+)*")
+
         func applyToPlainText(_ plainText: String) -> String {
             var transformed = ""
             var currentIndex = plainText.startIndex
 
-            for match in plainText.matches(of: alphanumericRegex) {
+            for match in plainText.matches(of: regex) {
                 transformed += plainText[currentIndex..<match.range.lowerBound]
 
-                let substring = String(match.1)
+                let substring = String(match.0)
+                let halfWidth = substring.applyingTransform(.fullwidthToHalfwidth, reverse: false) ?? substring
 
-                if substring.count == 1 {
-                    transformed +=
-                        substring.applyingTransform(.fullwidthToHalfwidth, reverse: true)
-                        ?? substring
-                } else if substring.wholeMatch(of: numberRegex) != nil {
-                    if substring.count <= maxTCYNumberLength {
-                        transformed += "<span class=\"tcy\">\(substring)</span>"
-                    } else if substring.count <= maxFullWidthNumberLength {
-                        transformed +=
-                            substring.applyingTransform(.fullwidthToHalfwidth, reverse: true)
-                            ?? substring
-                    } else {
-                        transformed += substring
-                    }
+                if halfWidth.count == 1 {
+                    transformed += halfWidth.applyingTransform(.fullwidthToHalfwidth, reverse: true) ?? halfWidth
+                } else if halfWidth.count <= tcyMaxLength {
+                    transformed += "<span class=\"tcy\">\(halfWidth)</span>"
+                } else if halfWidth.count <= fullWidthMaxLength {
+                    transformed += halfWidth.applyingTransform(.fullwidthToHalfwidth, reverse: true) ?? halfWidth
                 } else {
-                    if substring.count <= maxTCYAlphanumericLength {
-                        transformed += "<span class=\"tcy\">\(substring)</span>"
-                    } else if substring.count <= maxFullWidthAlphanumericLength {
-                        transformed +=
-                            substring.applyingTransform(.fullwidthToHalfwidth, reverse: true)
-                            ?? substring
-                    } else {
-                        transformed += substring
-                    }
+                    transformed += halfWidth
                 }
 
                 currentIndex = match.range.upperBound
@@ -418,10 +333,7 @@ extension FancyVrtlEpubBuilder.TCYOption {
             }
         }
 
-        return specialTCY.reduce(result) { partialResult, special in
-            partialResult.replacingOccurrences(
-                of: special, with: "<span class=\"tcy\">\(special)</span>")
-        }
+        return result
     }
 }
 

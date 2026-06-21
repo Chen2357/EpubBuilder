@@ -208,7 +208,7 @@ func manga() -> Book {
                 title: "第１話",
                 content: [
                     .image("i_0001.jpg"),
-                    .image("i_0002.jpg")
+                    .image("i_0002.jpg"),
                 ]
             ),
             BookSection(
@@ -216,20 +216,65 @@ func manga() -> Book {
                 content: [
                     .image("i_0003.jpg")
                 ]
-            )
+            ),
         ],
         images: (0...3).map { index in
-            ImageFile(name: "i_\(String(format: "%04d", index)).jpg", data: try! getCoverImageData(), mediaType: .jpeg)
+            ImageFile(
+                name: "i_\(String(format: "%04d", index)).jpg", data: try! getCoverImageData(),
+                mediaType: .jpeg)
         },
         coverImageName: "i_0000.jpg"
     )
 }
 
 @Test func outputMinimalManga() throws {
-    let book = manga().toEpub(builder: MinimalMangaEpubBuilder(width: 1792, height: 2380), bookId: .zero)
+    let book = manga().toEpub(
+        builder: MinimalMangaEpubBuilder(width: 1792, height: 2380), bookId: .zero)
     let outputURL = try getOutputFolderURL().appendingPathComponent("Manga")
     try FileManager.default.ensureDirectoryExists(at: outputURL)
     try book.write(to: outputURL)
     try book.writeEpub(to: outputURL.appending(component: "Manga.epub"))
 }
 
+@Test
+func `TCY test`() throws {
+    let tcy = FancyVrtlEpubBuilder.TCYOption.default
+
+    // Length 1 -> Full width
+    #expect(tcy.apply(to: "a") == "ａ")
+    #expect(tcy.apply(to: "1") == "１")
+    #expect(tcy.apply(to: "!") == "！")
+    #expect(tcy.apply(to: "１") == "１")
+
+    // Length 2-3 -> TCY
+    #expect(tcy.apply(to: "12") == "<span class=\"tcy\">12</span>")
+    #expect(tcy.apply(to: "abc") == "<span class=\"tcy\">abc</span>")
+    #expect(tcy.apply(to: "!!") == "<span class=\"tcy\">!!</span>")
+    #expect(tcy.apply(to: "！？") == "<span class=\"tcy\">!?</span>")
+
+    // Length 4 -> Full width
+    #expect(tcy.apply(to: "1234") == "１２３４")
+    #expect(tcy.apply(to: "abcd") == "ａｂｃｄ")
+    #expect(tcy.apply(to: "ＡＢＣＤ") == "ＡＢＣＤ")  // Case is preserved!
+
+    // Length 5+ -> Half width
+    #expect(tcy.apply(to: "12345") == "12345")
+    #expect(tcy.apply(to: "hello") == "hello")
+    #expect(tcy.apply(to: "ｈｅｌｌｏ") == "hello")
+
+    // Spaces inside
+    #expect(tcy.apply(to: "a b") == "<span class=\"tcy\">a b</span>")
+    #expect(tcy.apply(to: "a b c") == "a b c")  // Length 5 -> Half width
+    #expect(tcy.apply(to: "ａ　ｂ") == "<span class=\"tcy\">a b</span>")
+
+    // Leading and trailing spaces outside the sequence are not part of it
+    #expect(tcy.apply(to: " a ") == " ａ ")
+    // "a  b" has length 4, so it becomes full width: "ａ　　ｂ"
+    #expect(tcy.apply(to: " a  b ") == " ａ　　ｂ ")
+
+    // HTML tags are ignored
+    #expect(tcy.apply(to: "<p>12</p>") == "<p><span class=\"tcy\">12</span></p>")
+    #expect(
+        tcy.apply(to: "<span class=\"a\">12</span>")
+            == "<span class=\"a\"><span class=\"tcy\">12</span></span>")
+}
